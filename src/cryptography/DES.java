@@ -102,25 +102,6 @@ static short ENCRYPTION_MODE=1;
 										34,  2, 42, 10, 50, 18, 58, 26,
 										33,  1, 41,  9, 49, 17, 57, 25};
 	
-	
-/*	void print_char_as_binary(char input) {
-	int i;
-	for (i=0; i<8; i++) {
-	char shift_byte = 0x01 << (7-i);
-	if (shift_byte & input) {
-	printf("1");
-	} else {
-	printf("0");
-	}
-	}
-	}*/
-	
-	/*void generate_key(unsigned char* key) {
-	int i;
-	for (i=0; i<24; i++) {
-	key[i] = rand()%255;
-	}
-	}*/
 	char[] generate_key() 
 	{
 	int i;
@@ -132,40 +113,6 @@ static short ENCRYPTION_MODE=1;
 	return key;
 	}
 	
-	/*
-	void print_key_set(key_set key_set){
-	int i;
-	printf("K: \n");
-	for (i=0; i<8; i++) {
-	printf("%02X : ", key_set.k[i]);
-	print_char_as_binary(key_set.k[i]);
-	printf("\n");
-	}
-	printf("\nC: \n");
-	
-	for (i=0; i<4; i++) {
-	printf("%02X : ", key_set.c[i]);
-	print_char_as_binary(key_set.c[i]);
-	printf("\n");
-	}
-	printf("\nD: \n");
-	
-	for (i=0; i<4; i++) {
-	printf("%02X : ", key_set.d[i]);
-	print_char_as_binary(key_set.d[i]);
-	printf("\n");
-	}
-	printf("\n");
-	}*/
-	
-	/*void generate_sub_keys(char[] main_key, key_set* key_sets) {
-	int i, j;
-	int shift_size;
-	unsigned char shift_byte, first_shift_bits, second_shift_bits, third_shift_bits, fourth_shift_bits;
-	
-	for (i=0; i<8; i++) {
-	key_sets[0].k[i] = 0;
-	}*/
 	key_set[] generate_sub_keys(char[] main_key) 
 	{
 	key_set[] key_sets=new key_set[17];
@@ -271,6 +218,7 @@ static short ENCRYPTION_MODE=1;
 	return key_sets;
 	}
 	
+	//Function that does DES encryption/decryption
 	char[] process_message(char[] message_piece, key_set[] key_sets, int mode) 
 	{
 	char[] processed_piece=new char[8];
@@ -279,8 +227,6 @@ static short ENCRYPTION_MODE=1;
 	char shift_byte;
 	
 	char[] initial_permutation=new char[8];
-	//memset(initial_permutation, 0, 8);
-	//memset(processed_piece, 0, 8);
 	
 		for (i=0; i<0; i++)
 		{
@@ -311,8 +257,6 @@ static short ENCRYPTION_MODE=1;
 	
 		for (k=1; k<=16; k++) 
 		{
-		//memcpy(ln, r, 4);
-		//memset(er, 0, 6);
 			
 			for (i=0; i<4; i++)
 			{
@@ -469,7 +413,7 @@ static short ENCRYPTION_MODE=1;
 	
 }
 
-
+//Class key_set, used to store de 16 keys of each round
 class key_set
 {
 char k[];
