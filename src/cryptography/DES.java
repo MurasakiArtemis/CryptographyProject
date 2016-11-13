@@ -1,10 +1,14 @@
 package cryptography;
 
-import java.util.Random;
-
 public class DES {
+	key_set[] key_sets;
 static short DECRYPTION_MODE=0;
 static short ENCRYPTION_MODE=1;
+
+	DES(byte[] key)
+	{
+		key_sets = this.generate_sub_keys(key);
+	}
 	
 	int initial_key_permutaion[] = {57, 49,  41, 33,  25,  17,  9,
 									 1, 58,  50, 42,  34,  26, 18,
@@ -102,23 +106,12 @@ static short ENCRYPTION_MODE=1;
 										34,  2, 42, 10, 50, 18, 58, 26,
 										33,  1, 41,  9, 49, 17, 57, 25};
 	
-	char[] generate_key() 
-	{
-	int i;
-	char[] key=new char[8];
-	Random r=new Random();
-	
-		for (i=0; i<8; i++) key[i] = (char)r.nextInt(255);
-		
-	return key;
-	}
-	
-	key_set[] generate_sub_keys(char[] main_key) 
+	key_set[] generate_sub_keys(byte[] main_key) 
 	{
 	key_set[] key_sets=new key_set[17];
 	int i, j;
 	int shift_size;
-	char shift_byte, first_shift_bits, second_shift_bits, third_shift_bits, fourth_shift_bits;
+	byte shift_byte, first_shift_bits, second_shift_bits, third_shift_bits, fourth_shift_bits;
 		
 		for (i=0; i<17; i++) key_sets[i]=new key_set();
 		for (i=0; i<8; i++) key_sets[0].k[i] = 0;
@@ -126,7 +119,7 @@ static short ENCRYPTION_MODE=1;
 		for (i=0; i<56; i++) 
 		{
 		shift_size = initial_key_permutaion[i];
-		shift_byte = (char) (0x80 >> ((shift_size - 1)%8));
+		shift_byte = (byte) (0x80 >> ((shift_size - 1)%8));
 		shift_byte &= main_key[(shift_size - 1)/8];
 		shift_byte <<= ((shift_size - 1)%8);
 		key_sets[0].k[i/8] |= (shift_byte >> i%8);
@@ -134,15 +127,15 @@ static short ENCRYPTION_MODE=1;
 	
 		for (i=0; i<3; i++) key_sets[0].c[i] = key_sets[0].k[i];
 	
-	key_sets[0].c[3] = (char) (key_sets[0].k[3] & 0xF0);
+	key_sets[0].c[3] = (byte) (key_sets[0].k[3] & 0xF0);
 	
 		for (i=0; i<3; i++) 
 		{
-		key_sets[0].d[i] = (char) ((key_sets[0].k[i+3] & 0x0F) << 4);
+		key_sets[0].d[i] = (byte) ((key_sets[0].k[i+3] & 0x0F) << 4);
 		key_sets[0].d[i] |= (key_sets[0].k[i+4] & 0xF0) >> 4;
 		}
 	
-	key_sets[0].d[3] = (char) ((key_sets[0].k[6] & 0x0F) << 4);
+	key_sets[0].d[3] = (byte) ((key_sets[0].k[6] & 0x0F) << 4);
 	
 	
 		for (i=1; i<17; i++) 
@@ -155,14 +148,14 @@ static short ENCRYPTION_MODE=1;
 		
 		shift_size = key_shift_sizes[i];
 
-			if (shift_size == 1) shift_byte = 0x80; 
-			else shift_byte = 0xC0;
+			if (shift_size == 1) shift_byte = (byte) 0x80; 
+			else shift_byte = (byte) 0xC0;
 	
 		// Process C
-		first_shift_bits = (char) (shift_byte & key_sets[i].c[0]);
-		second_shift_bits = (char) (shift_byte & key_sets[i].c[1]);
-		third_shift_bits = (char) (shift_byte & key_sets[i].c[2]);
-		fourth_shift_bits = (char) (shift_byte & key_sets[i].c[3]);
+		first_shift_bits = (byte) (shift_byte & key_sets[i].c[0]);
+		second_shift_bits = (byte) (shift_byte & key_sets[i].c[1]);
+		third_shift_bits = (byte) (shift_byte & key_sets[i].c[2]);
+		fourth_shift_bits = (byte) (shift_byte & key_sets[i].c[3]);
 		
 		key_sets[i].c[0] <<= shift_size;
 		key_sets[i].c[0] |= (second_shift_bits >> (8 - shift_size));
@@ -177,10 +170,10 @@ static short ENCRYPTION_MODE=1;
 		key_sets[i].c[3] |= (first_shift_bits >> (4 - shift_size));
 		
 		// Process D
-		first_shift_bits = (char) (shift_byte & key_sets[i].d[0]);
-		second_shift_bits = (char) (shift_byte & key_sets[i].d[1]);
-		third_shift_bits = (char) (shift_byte & key_sets[i].d[2]);
-		fourth_shift_bits = (char) (shift_byte & key_sets[i].d[3]);
+		first_shift_bits = (byte) (shift_byte & key_sets[i].d[0]);
+		second_shift_bits = (byte) (shift_byte & key_sets[i].d[1]);
+		third_shift_bits = (byte) (shift_byte & key_sets[i].d[2]);
+		fourth_shift_bits = (byte) (shift_byte & key_sets[i].d[3]);
 		
 		key_sets[i].d[0] <<= shift_size;
 		key_sets[i].d[0] |= (second_shift_bits >> (8 - shift_size));
@@ -200,13 +193,13 @@ static short ENCRYPTION_MODE=1;
 				
 				if (shift_size <= 28) 
 				{
-				shift_byte = (char) (0x80 >> ((shift_size - 1)%8));
+				shift_byte = (byte) (0x80 >> ((shift_size - 1)%8));
 				shift_byte &= key_sets[i].c[(shift_size - 1)/8];
 				shift_byte <<= ((shift_size - 1)%8);
 				} 
 				else 
 				{
-				shift_byte = (char) (0x80 >> ((shift_size - 29)%8));
+				shift_byte = (byte) (0x80 >> ((shift_size - 29)%8));
 				shift_byte &= key_sets[i].d[(shift_size - 29)/8];
 				shift_byte <<= ((shift_size - 29)%8);
 				}
@@ -219,31 +212,31 @@ static short ENCRYPTION_MODE=1;
 	}
 	
 	//Function that does DES encryption/decryption
-	char[] process_message(char[] message_piece, key_set[] key_sets, int mode) 
+	byte[] process_message(byte[] message_piece, int mode) 
 	{
-	char[] processed_piece=new char[8];
+	byte[] processed_piece=new byte[8];
 	int i, k;
 	int shift_size;
-	char shift_byte;
+	byte shift_byte;
 	
-	char[] initial_permutation=new char[8];
+	byte[] initial_permutation=new byte[8];
 	
 		for (i=0; i<0; i++)
 		{
-		initial_permutation[i]=(char)0;
-		processed_piece[i]=(char)0;
+		initial_permutation[i]=(byte)0;
+		processed_piece[i]=(byte)0;
 		}
 	
 		for (i=0; i<64; i++) 
 		{
 		shift_size = initial_message_permutation[i];
-		shift_byte = (char) (0x80 >> ((shift_size - 1)%8));
+		shift_byte = (byte) (0x80 >> ((shift_size - 1)%8));
 		shift_byte &= message_piece[(shift_size - 1)/8];
 		shift_byte <<= ((shift_size - 1)%8);
 		initial_permutation[i/8] |= (shift_byte >> i%8);
 		}
 	
-	char[] l=new char[4], r=new char[4];
+	byte[] l=new byte[4], r=new byte[4];
 	
 		for (i=0; i<4; i++) 
 		{
@@ -251,7 +244,7 @@ static short ENCRYPTION_MODE=1;
 		r[i] = initial_permutation[i+4];
 		}
 	
-	char[] ln=new char[4], rn=new char[4], er=new char[6], ser=new char[4];
+	byte[] ln=new byte[4], rn=new byte[4], er=new byte[6], ser=new byte[4];
 	
 	int key_index;
 	
@@ -265,13 +258,13 @@ static short ENCRYPTION_MODE=1;
 			
 			for (i=0; i<6; i++)
 			{
-			er[i]=(char)0;
+			er[i]=(byte)0;
 			}
 		
 			for (i=0; i<48; i++) 
 			{
 			shift_size = message_expansion[i];
-			shift_byte = (char) (0x80 >> ((shift_size - 1)%8));
+			shift_byte = (byte) (0x80 >> ((shift_size - 1)%8));
 			shift_byte &= r[(shift_size - 1)/8];
 			shift_byte <<= ((shift_size - 1)%8);
 			er[i/8] |= (shift_byte >> i%8);
@@ -282,7 +275,7 @@ static short ENCRYPTION_MODE=1;
 	
 			for (i=0; i<6; i++) er[i] ^= key_sets[key_index].k[i];
 	
-		char row, column;
+		byte row, column;
 	
 			for (i=0; i<4; i++) ser[i] = 0;
 	
@@ -297,7 +290,7 @@ static short ENCRYPTION_MODE=1;
 		column = 0;
 		column |= ((er[0] & 0x78) >> 3);
 		
-		ser[0] |= ((char)S1[row*16+column] << 4);
+		ser[0] |= ((byte)S1[row*16+column] << 4);
 		
 		row = 0;
 		row |= (er[0] & 0x02);
@@ -307,7 +300,7 @@ static short ENCRYPTION_MODE=1;
 		column |= ((er[0] & 0x01) << 3);
 		column |= ((er[1] & 0xE0) >> 5);
 		
-		ser[0] |= (char)S2[row*16+column];
+		ser[0] |= (byte)S2[row*16+column];
 		
 		// Byte 2
 		row = 0;
@@ -318,7 +311,7 @@ static short ENCRYPTION_MODE=1;
 		column |= ((er[1] & 0x07) << 1);
 		column |= ((er[2] & 0x80) >> 7);
 		
-		ser[1] |= ((char)S3[row*16+column] << 4);
+		ser[1] |= ((byte)S3[row*16+column] << 4);
 		
 		row = 0;
 		row |= ((er[2] & 0x20) >> 4);
@@ -327,7 +320,7 @@ static short ENCRYPTION_MODE=1;
 		column = 0;
 		column |= ((er[2] & 0x1E) >> 1);
 		
-		ser[1] |= (char)S4[row*16+column];
+		ser[1] |= (byte)S4[row*16+column];
 		
 		// Byte 3
 		row = 0;
@@ -337,7 +330,7 @@ static short ENCRYPTION_MODE=1;
 		column = 0;
 		column |= ((er[3] & 0x78) >> 3);
 		
-		ser[2] |= ((char)S5[row*16+column] << 4);
+		ser[2] |= ((byte)S5[row*16+column] << 4);
 		
 		row = 0;
 		row |= (er[3] & 0x02);
@@ -347,7 +340,7 @@ static short ENCRYPTION_MODE=1;
 		column |= ((er[3] & 0x01) << 3);
 		column |= ((er[4] & 0xE0) >> 5);
 		
-		ser[2] |= (char)S6[row*16+column];
+		ser[2] |= (byte)S6[row*16+column];
 		
 		// Byte 4
 		row = 0;
@@ -358,7 +351,7 @@ static short ENCRYPTION_MODE=1;
 		column |= ((er[4] & 0x07) << 1);
 		column |= ((er[5] & 0x80) >> 7);
 		
-		ser[3] |= ((char)S7[row*16+column] << 4);
+		ser[3] |= ((byte)S7[row*16+column] << 4);
 		
 		row = 0;
 		row |= ((er[5] & 0x20) >> 4);
@@ -367,14 +360,14 @@ static short ENCRYPTION_MODE=1;
 		column = 0;
 		column |= ((er[5] & 0x1E) >> 1);
 		
-		ser[3] |= (char)S8[row*16+column];
+		ser[3] |= (byte)S8[row*16+column];
 		
 			for (i=0; i<4; i++) rn[i] = 0;
 		
 			for (i=0; i<32; i++) 
 			{
 			shift_size = right_sub_message_permutation[i];
-			shift_byte = (char) (0x80 >> ((shift_size - 1)%8));
+			shift_byte = (byte) (0x80 >> ((shift_size - 1)%8));
 			shift_byte &= ser[(shift_size - 1)/8];
 			shift_byte <<= ((shift_size - 1)%8);
 			
@@ -390,7 +383,7 @@ static short ENCRYPTION_MODE=1;
 			}
 		}
 		
-	char[] pre_end_permutation=new char[8];
+	byte[] pre_end_permutation=new byte[8];
 		
 		for (i=0; i<4; i++) 
 		{
@@ -401,7 +394,7 @@ static short ENCRYPTION_MODE=1;
 		for (i=0; i<64; i++) 
 		{
 		shift_size = final_message_permutation[i];
-		shift_byte = (char) (0x80 >> ((shift_size - 1)%8));
+		shift_byte = (byte) (0x80 >> ((shift_size - 1)%8));
 		shift_byte &= pre_end_permutation[(shift_size - 1)/8];
 		shift_byte <<= ((shift_size - 1)%8);
 		
@@ -416,14 +409,14 @@ static short ENCRYPTION_MODE=1;
 //Class key_set, used to store de 16 keys of each round
 class key_set
 {
-char k[];
-char c[];
-char d[];
+byte k[];
+byte c[];
+byte d[];
 
 	public key_set()
 	{
-	k=new char[8];
-	c=new char [4];
-	d=new char[4];
+	k=new byte[8];
+	c=new byte [4];
+	d=new byte[4];
 	}
 }
