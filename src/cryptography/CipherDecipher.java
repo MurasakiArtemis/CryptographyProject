@@ -249,6 +249,28 @@ public class CipherDecipher
 		case AES256:
 			break;
 		case DES168:
+			byte[] key1 = new byte[8];
+			byte[] key2 = new byte[8];
+			byte[] key3 = new byte[8];
+			byte[] aux = new byte[block_size];
+			System.arraycopy(key, 0, key1, 0, 7);
+			System.arraycopy(key, 7, key2, 0, 7);
+			System.arraycopy(key, 14, key3, 0, 7);
+			DES first = new DES(key1);
+			DES second = new DES(key2);
+			DES third = new DES(key3);
+			if(encrypt)
+			{
+				first.process_message(origin, result, 1);
+				second.process_message(result, aux, 0);
+				third.process_message(aux, result, 1);
+			}
+			else
+			{
+				third.process_message(aux, result, 0);
+				second.process_message(result, aux, 1);
+				first.process_message(origin, result, 0);
+			}
 			break;
 		}
 	}
