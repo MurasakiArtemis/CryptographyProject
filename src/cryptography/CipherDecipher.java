@@ -25,21 +25,6 @@ public class CipherDecipher
 			fOut.write(2);
 			break;		
 		}
-		switch(algorithm)
-		{
-		case AES128:
-			fOut.write(0);
-			break;
-		case AES192:
-			fOut.write(1);
-			break;
-		case AES256:
-			fOut.write(2);
-			break;
-		case DES168:
-			fOut.write(3);
-			break;
-		}
 		if(operation_mode != OperationModes.ECB)
 			fOut.write(iv);
     	int padding = (int) (origin_file.length()%block_size);
@@ -101,11 +86,7 @@ public class CipherDecipher
 		switch(algorithm)
 		{
 		case AES128:
-			block_size = 16;
-			break;
 		case AES192:
-			block_size = 16;
-			break;
 		case AES256:
 			block_size = 16;
 			break;
@@ -136,13 +117,13 @@ public class CipherDecipher
 	        switch(operation_mode)
 	        {
 			case CBC:
-				CBC(origin, result, key, block_size, true);
+				CBC(origin, result, block_size, true);
 				break;
 			case CTR:
-				CTR(origin, iv, result, key, block_size, true);
+				CTR(origin, iv, result, block_size, true);
 				break;
 			case ECB:
-				cipher(origin, result, key, block_size, true);
+				cipher(origin, result, block_size, true);
 				break;
 			default:
 				break;
@@ -152,25 +133,89 @@ public class CipherDecipher
 	    }
 	}
 	
-	private static void CBC(byte[] origin, byte[] result, byte[] key, short block_size, boolean encrypt)
+	public static void decipher(File origin_file, File destination_file) throws Exception
+	{
+		FileInputStream fIn = new FileInputStream(origin_file);
+		FileOutputStream fOut = new FileOutputStream(destination_file);
+		short block_size = 16;
+		switch(algorithm)
+		{
+		case AES128:
+		case AES256:
+		case AES192:
+			block_size = 16;
+			break;
+		case DES168:
+			block_size = 8;
+			break;
+		}
+		byte[] origin = new byte[block_size];
+		byte[] result = new byte[block_size];
+		byte[] iv = new byte[block_size];
+        int readValue = fIn.read();
+        OperationModes operation_mode = null;
+        switch(readValue)
+        {
+        case 0:
+        	operation_mode = OperationModes.CBC;
+        	break;
+        case 1:
+        	operation_mode = OperationModes.CTR;
+        	break;
+        case 2:
+        	operation_mode = OperationModes.ECB;
+        	break;
+        }
+        if(operation_mode != OperationModes.ECB)
+			fIn.read(iv);
+    	int padding = fIn.read();
+		for(int i = 0; i < origin_file.length(); i += block_size)
+	    {
+	        switch(operation_mode)
+	        {
+			case CBC:
+				CBC(origin, iv, result, block_size, false);
+				break;
+			case CTR:
+				CTR(origin, iv, result, block_size, false);
+				break;
+			case ECB:
+				cipher(origin, result, block_size, false);
+				break;
+			default:
+				break;
+	        
+	        }
+	        if(fIn.available() != 0)
+	        	fOut.write(result);
+	        else
+	        	fOut.write(result, 0, block_size - padding);
+	    }
+	}
+
+	private static void CBC(byte[] origin, byte[] aux, byte[] result, short block_size, boolean encrypt)
+	{
+		if(!encrypt)
+	    {
+	        cipher(origin, result, block_size, encrypt);
+	        XOR_Block(result, aux, result, block_size);
+	        System.arraycopy(origin, 0, aux, 0, block_size);
+	    }
+	}
+	
+	private static void CBC(byte[] origin, byte[] result, short block_size, boolean encrypt)
 	{
 		byte[] aux = new byte[block_size];
 	    if(encrypt)
 	    {
 	        XOR_Block(origin, result, aux, block_size);
-	        cipher(aux, result, key, block_size, encrypt);
-	    }
-	    else
-	    {
-	        cipher(origin, result, key, block_size, encrypt);
-	        XOR_Block(result, aux, result, block_size);
-	        System.arraycopy(origin, 0, aux, 0, block_size);
+	        cipher(aux, result, block_size, encrypt);
 	    }
 	}
 
-	private static void CTR(byte[] origin, byte[] IV, byte[] result, byte[] key, short block_size, boolean encrypt)
+	private static void CTR(byte[] origin, byte[] IV, byte[] result, short block_size, boolean encrypt)
 	{
-	    cipher(IV, result, key, block_size, true);
+	    cipher(IV, result, block_size, true);
 	    XOR_Block(result, origin, result, block_size);
 	    add(IV, (byte)1);
 	}
@@ -193,7 +238,7 @@ public class CipherDecipher
 	        result[i] = (byte)(argument1[i] ^ argument2[i]);
 	}
 
-	private static void cipher(byte[] origin, byte[] result,  byte[] key, short block_size, boolean encrypt)
+	private static void cipher(byte[] origin, byte[] result, short block_size, boolean encrypt)
 	{
 		switch(algorithm)
 		{
