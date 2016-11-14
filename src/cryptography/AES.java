@@ -1,23 +1,25 @@
 package cryptography;
 
 public class AES {
-static byte[][] state;
-	
-/**************************** DATA TYPES ****************************/
-static int AES_128_ROUNDS=10;
-static int AES_192_ROUNDS=12;
-static int AES_256_ROUNDS=14;
+	private byte[][] state;
+	private int[] key;
+	private int keysize;
 
-/*********************** FUNCTION DECLARATIONS **********************/
-//void ccm_prepare_first_ctr_blk(BYTE counter[], const BYTE nonce[], int nonce_len, int payload_len_store_size);
-//void ccm_prepare_first_format_blk(BYTE buf[], int assoc_len, int payload_len, int payload_len_store_size, int mac_len, const BYTE nonce[], int nonce_len);
-//void ccm_format_assoc_data(BYTE buf[], int *end_of_buf, const BYTE assoc[], int assoc_len);
-//void ccm_format_payload_data(BYTE buf[], int *end_of_buf, const BYTE payload[], int payload_len);
+	/**************************** DATA TYPES ****************************/
+	/*private int AES_128_ROUNDS=10;
+	private int AES_192_ROUNDS=12;
+	private int AES_256_ROUNDS=14;*/
+
+	/*********************** FUNCTION DECLARATIONS **********************/
+	//void ccm_prepare_first_ctr_blk(BYTE counter[], const BYTE nonce[], int nonce_len, int payload_len_store_size);
+	//void ccm_prepare_first_format_blk(BYTE buf[], int assoc_len, int payload_len, int payload_len_store_size, int mac_len, const BYTE nonce[], int nonce_len);
+	//void ccm_format_assoc_data(BYTE buf[], int *end_of_buf, const BYTE assoc[], int assoc_len);
+	//void ccm_format_payload_data(BYTE buf[], int *end_of_buf, const BYTE payload[], int payload_len);
 
 	/**************************** VARIABLES *****************************/
 	// This is the specified AES SBox. To look up a substitution value, put the first
 	// nibble in the first index (row) and the second nibble in the second index (column).
-	static byte aes_sbox[][] = { 
+	private byte aes_sbox[][] = { 
 			{(byte)0x63,(byte)0x7C,(byte)0x77,(byte)0x7B,(byte)0xF2,(byte)0x6B,(byte)0x6F,(byte)0xC5,(byte)0x30,(byte)0x01,(byte)0x67,(byte)0x2B,(byte)0xFE,(byte)0xD7,(byte)0xAB,(byte)0x76},
 			{(byte)0xCA,(byte)0x82,(byte)0xC9,(byte)0x7D,(byte)0xFA,(byte)0x59,(byte)0x47,(byte)0xF0,(byte)0xAD,(byte)0xD4,(byte)0xA2,(byte)0xAF,(byte)0x9C,(byte)0xA4,(byte)0x72,(byte)0xC0},
 			{(byte)0xB7,(byte)0xFD,(byte)0x93,(byte)0x26,(byte)0x36,(byte)0x3F,(byte)0xF7,(byte)0xCC,(byte)0x34,(byte)0xA5,(byte)0xE5,(byte)0xF1,(byte)0x71,(byte)0xD8,(byte)0x31,(byte)0x15},
@@ -36,7 +38,7 @@ static int AES_256_ROUNDS=14;
 			{(byte)0x8C,(byte)0xA1,(byte)0x89,(byte)0x0D,(byte)0xBF,(byte)0xE6,(byte)0x42,(byte)0x68,(byte)0x41,(byte)0x99,(byte)0x2D,(byte)0x0F,(byte)0xB0,(byte)0x54,(byte)0xBB,(byte)0x16}
 	};
 
-	static byte aes_invsbox[][] = {
+	private byte aes_invsbox[][] = {
 			{(byte)0x52,(byte)0x09,(byte)0x6A,(byte)0xD5,(byte)0x30,(byte)0x36,(byte)0xA5,(byte)0x38,(byte)0xBF,(byte)0x40,(byte)0xA3,(byte)0x9E,(byte)0x81,(byte)0xF3,(byte)0xD7,(byte)0xFB},
 			{(byte)0x7C,(byte)0xE3,(byte)0x39,(byte)0x82,(byte)0x9B,(byte)0x2F,(byte)0xFF,(byte)0x87,(byte)0x34,(byte)0x8E,(byte)0x43,(byte)0x44,(byte)0xC4,(byte)0xDE,(byte)0xE9,(byte)0xCB},
 			{(byte)0x54,(byte)0x7B,(byte)0x94,(byte)0x32,(byte)0xA6,(byte)0xC2,(byte)0x23,(byte)0x3D,(byte)0xEE,(byte)0x4C,(byte)0x95,(byte)0x0B,(byte)0x42,(byte)0xFA,(byte)0xC3,(byte)0x4E},
@@ -61,7 +63,7 @@ static int AES_256_ROUNDS=14;
 	// coefficients are used: 0x01, 0x02, 0x03, 0x09, 0x0b, 0x0d, 0x0e, but multiplication by
 	// 1 is negligible leaving only 6 coefficients. Each column of the table is devoted to one
 	// of these coefficients, in the ascending order of value, from values 0x00 to 0xFF.
-	static byte gf_mul[][] = {
+	private byte gf_mul[][] = {
 			{(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00},{(byte)0x02,(byte)0x03,(byte)0x09,(byte)0x0b,(byte)0x0d,(byte)0x0e},
 			{(byte)0x04,(byte)0x06,(byte)0x12,(byte)0x16,(byte)0x1a,(byte)0x1c},{(byte)0x06,(byte)0x05,(byte)0x1b,(byte)0x1d,(byte)0x17,(byte)0x12},
 			{(byte)0x08,(byte)0x0c,(byte)0x24,(byte)0x2c,(byte)0x34,(byte)0x38},{(byte)0x0a,(byte)0x0f,(byte)0x2d,(byte)0x27,(byte)0x39,(byte)0x36},
@@ -193,79 +195,80 @@ static int AES_256_ROUNDS=14;
 	};
 
 
-	public AES()
+	public AES(byte[] key, int keysize)
 	{
-	this.state=new byte[4][4];
+		this.state=new byte[4][4];
+		this.key = this.aes_key_setup(key, keysize);
 	}
-	
+
 	/****************************** MACROS ******************************/
 	// The least significant byte of the word is rotated to the end.
 
 	//#define KE_ROTWORD(x) (((x) << 8) | ((x) >> 24))
-	private static int KE_ROTWORD(int x)
+	private int KE_ROTWORD(int x)
 	{
-	return (((x) << 8) | ((x) >> 24));
+		return (((x) << 8) | ((x) >> 24));
 	}
 
-		
+
 	/*******************
-	* AES
-	*******************/
+	 * AES
+	 *******************/
 	/////////////////
 	// KEY EXPANSION
 	/////////////////
 
 	// Substitutes a word using the AES S-Box.
-	private static int SubWord(int word)
+	private int SubWord(int word)
 	{
-	int result;
+		int result;
 
-	result = (int)aes_sbox[(word >> 4) & 0x0000000F][word & 0x0000000F];
-	result += (int)aes_sbox[(word >> 12) & 0x0000000F][(word >> 8) & 0x0000000F] << 8;
-	result += (int)aes_sbox[(word >> 20) & 0x0000000F][(word >> 16) & 0x0000000F] << 16;
-	result += (int)aes_sbox[(word >> 28) & 0x0000000F][(word >> 24) & 0x0000000F] << 24;
-		
-	return result;
+		result = (int)aes_sbox[(word >> 4) & 0x0000000F][word & 0x0000000F];
+		result += (int)aes_sbox[(word >> 12) & 0x0000000F][(word >> 8) & 0x0000000F] << 8;
+		result += (int)aes_sbox[(word >> 20) & 0x0000000F][(word >> 16) & 0x0000000F] << 16;
+		result += (int)aes_sbox[(word >> 28) & 0x0000000F][(word >> 24) & 0x0000000F] << 24;
+
+		return result;
 	}
 
 	// Performs the action of generating the keys that will be used in every round of
 	// encryption. "key" is the user-supplied input key, "w" is the output key schedule,
 	// "keysize" is the length in bits of "key", must be 128, 192, or 256.
 	//void aes_key_setup(const BYTE key[], WORD w[], int keysize)
-	int[] aes_key_setup(byte key[], int keysize)
+	private int[] aes_key_setup(byte key[], int keysize)
 	{
-	int Nb=4, Nr=0, Nk=0, idx;
-	int temp, Rcon[]={0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
-	                  0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
-	                  0xab000000,0x4d000000,0x9a000000};
+		int Nb=4, Nr=0, Nk=0, idx;
+		int temp, Rcon[]={0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
+				0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
+				0xab000000,0x4d000000,0x9a000000};
 
 		switch (keysize) 
 		{
-			case 128: Nr = 10; Nk = 4; break;
-			case 192: Nr = 12; Nk = 6; break;
-			case 256: Nr = 14; Nk = 8; break;
-			//default: return;
+		case 128: Nr = 10; Nk = 4; break;
+		case 192: Nr = 12; Nk = 6; break;
+		case 256: Nr = 14; Nk = 8; break;
+		//default: return;
 		}
-		
-	//Check this XD
-	int[] w=new int[Nb * (Nr+1)];
+
+		//Check this XD
+		int[] w=new int[Nb * (Nr+1)];
 
 		for (idx=0; idx < Nk; ++idx) 
 		{
-		w[idx] = ((key[4 * idx]) << 24) | ((key[4 * idx + 1]) << 16) | ((key[4 * idx + 2]) << 8) | ((key[4 * idx + 3]));
+			w[idx] = ((key[4 * idx]) << 24) | ((key[4 * idx + 1]) << 16) | ((key[4 * idx + 2]) << 8) | ((key[4 * idx + 3]));
 		}
 
 		for (idx = Nk; idx < Nb * (Nr+1); ++idx) 
 		{	
-		temp = w[idx - 1];
-		
+			temp = w[idx - 1];
+
 			if ((idx % Nk) == 0) temp = SubWord(KE_ROTWORD(temp)) ^ Rcon[(idx-1)/Nk];
 			else if (Nk > 6 && (idx % Nk) == 4) temp = SubWord(temp);
-			
-		w[idx] = w[idx-Nk] ^ temp;
+
+			w[idx] = w[idx-Nk] ^ temp;
 		}
-		
-	return w;
+
+		return w;
 	}
 
 	/////////////////
@@ -277,49 +280,49 @@ static int AES_256_ROUNDS=14;
 	// Also performs the job of InvAddRoundKey(); since the function is a simple XOR process,
 	// it is its own inverse.
 	//void AddRoundKey(BYTE state[][4], const WORD w[])
-	private static void AddRoundKey(int[] w)
+	private void AddRoundKey(int[] w)
 	{
-	byte[] subkey=new byte[4];
+		byte[] subkey=new byte[4];
 
-	// memcpy(subkey,&w[idx],4); // Not accurate for big endian machines
-	// Subkey 1
-	subkey[0] = (byte)(w[0] >> 24);
-	subkey[1] = (byte)(w[0] >> 16);
-	subkey[2] = (byte)(w[0] >> 8);
-	subkey[3] = (byte)w[0];
-	state[0][0] ^= subkey[0];
-	state[1][0] ^= subkey[1];
-	state[2][0] ^= subkey[2];
-	state[3][0] ^= subkey[3];
-	// Subkey 2
-	subkey[0] = (byte)(w[1] >> 24);
-	subkey[1] = (byte)(w[1] >> 16);
-	subkey[2] = (byte)(w[1] >> 8);
-	subkey[3] = (byte)w[1];
-	state[0][1] ^= subkey[0];
-	state[1][1] ^= subkey[1];
-	state[2][1] ^= subkey[2];
-	state[3][1] ^= subkey[3];
-	// Subkey 3
-	subkey[0] = (byte)(w[2] >> 24);
-	subkey[1] = (byte)(w[2] >> 16);
-	subkey[2] = (byte)(w[2] >> 8);
-	subkey[3] = (byte)w[2];
-	state[0][2] ^= subkey[0];
-	state[1][2] ^= subkey[1];
-	state[2][2] ^= subkey[2];
-	state[3][2] ^= subkey[3];
-	// Subkey 4
-	subkey[0] = (byte)(w[3] >> 24);
-	subkey[1] = (byte)(w[3] >> 16);
-	subkey[2] = (byte)(w[3] >> 8);
-	subkey[3] = (byte)w[3];
-	state[0][3] ^= subkey[0];
-	state[1][3] ^= subkey[1];
-	state[2][3] ^= subkey[2];
-	state[3][3] ^= subkey[3];
+		// memcpy(subkey,&w[idx],4); // Not accurate for big endian machines
+		// Subkey 1
+		subkey[0] = (byte)(w[0] >> 24);
+		subkey[1] = (byte)(w[0] >> 16);
+		subkey[2] = (byte)(w[0] >> 8);
+		subkey[3] = (byte)w[0];
+		state[0][0] ^= subkey[0];
+		state[1][0] ^= subkey[1];
+		state[2][0] ^= subkey[2];
+		state[3][0] ^= subkey[3];
+		// Subkey 2
+		subkey[0] = (byte)(w[1] >> 24);
+		subkey[1] = (byte)(w[1] >> 16);
+		subkey[2] = (byte)(w[1] >> 8);
+		subkey[3] = (byte)w[1];
+		state[0][1] ^= subkey[0];
+		state[1][1] ^= subkey[1];
+		state[2][1] ^= subkey[2];
+		state[3][1] ^= subkey[3];
+		// Subkey 3
+		subkey[0] = (byte)(w[2] >> 24);
+		subkey[1] = (byte)(w[2] >> 16);
+		subkey[2] = (byte)(w[2] >> 8);
+		subkey[3] = (byte)w[2];
+		state[0][2] ^= subkey[0];
+		state[1][2] ^= subkey[1];
+		state[2][2] ^= subkey[2];
+		state[3][2] ^= subkey[3];
+		// Subkey 4
+		subkey[0] = (byte)(w[3] >> 24);
+		subkey[1] = (byte)(w[3] >> 16);
+		subkey[2] = (byte)(w[3] >> 8);
+		subkey[3] = (byte)w[3];
+		state[0][3] ^= subkey[0];
+		state[1][3] ^= subkey[1];
+		state[2][3] ^= subkey[2];
+		state[3][3] ^= subkey[3];
 	}
-	
+
 	/////////////////
 	// (Inv)SubBytes
 	/////////////////
@@ -327,20 +330,20 @@ static int AES_256_ROUNDS=14;
 	// Performs the SubBytes step. All bytes in the state are substituted with a
 	// pre-calculated value from a lookup table.
 	//void SubBytes(BYTE state[][4])
-	private static void SubBytes()
+	private void SubBytes()
 	{
 		for (int i=0; i<4; i++)
 		{
 			for (int j=0; j<4; j++){
-			int i1=(state[i][j] >> 4)&0x0F;
-			int i2=(state[i][j] & 0x0F);
-			//System.out.println("i1: "+i1+", i2: "+i2);
-			
-			state[i][j] = aes_sbox[i1][i2];
+				int i1=(state[i][j] >> 4)&0x0F;
+				int i2=(state[i][j] & 0x0F);
+				//System.out.println("i1: "+i1+", i2: "+i2);
+
+				state[i][j] = aes_sbox[i1][i2];
 			}
 		}
-		
-	/*state[0][0] = aes_sbox[state[0][0] >> 4][state[0][0] & 0x0F];
+
+		/*state[0][0] = aes_sbox[state[0][0] >> 4][state[0][0] & 0x0F];
 	state[0][1] = aes_sbox[state[0][1] >> 4][state[0][1] & 0x0F];
 	state[0][2] = aes_sbox[state[0][2] >> 4][state[0][2] & 0x0F];
 	state[0][3] = aes_sbox[state[0][3] >> 4][state[0][3] & 0x0F];
@@ -359,19 +362,19 @@ static int AES_256_ROUNDS=14;
 	}
 
 	//void InvSubBytes(BYTE state[][4])
-	private static void InvSubBytes()
+	private void InvSubBytes()
 	{
 		for (int i=0; i<4; i++)
 		{
 			for (int j=0; j<4; j++){
-			int i1=(state[i][j] >> 4)&0x0F;
-			int i2=(state[i][j] & 0x0F);
-			//System.out.println("i1: "+i1+", i2: "+i2);
-			
-			state[i][j] = aes_invsbox[i1][i2];
+				int i1=(state[i][j] >> 4)&0x0F;
+				int i2=(state[i][j] & 0x0F);
+				//System.out.println("i1: "+i1+", i2: "+i2);
+
+				state[i][j] = aes_invsbox[i1][i2];
 			}
 		}
-	/*state[0][0] = aes_invsbox[state[0][0] >> 4][state[0][0] & 0x0F];
+		/*state[0][0] = aes_invsbox[state[0][0] >> 4][state[0][0] & 0x0F];
 	state[0][1] = aes_invsbox[state[0][1] >> 4][state[0][1] & 0x0F];
 	state[0][2] = aes_invsbox[state[0][2] >> 4][state[0][2] & 0x0F];
 	state[0][3] = aes_invsbox[state[0][3] >> 4][state[0][3] & 0x0F];
@@ -395,56 +398,56 @@ static int AES_256_ROUNDS=14;
 
 	// Performs the ShiftRows step. All rows are shifted cylindrically to the left.
 	//void ShiftRows(BYTE state[][4])
-	private static void ShiftRows()
+	private void ShiftRows()
 	{
-	int t;
+		int t;
 
-	// Shift left by 1
-	t = state[1][0];
-	state[1][0] = state[1][1];
-	state[1][1] = state[1][2];
-	state[1][2] = state[1][3];
-	state[1][3] = (byte)t;
-	// Shift left by 2
-	t = state[2][0];
-	state[2][0] = state[2][2];
-	state[2][2] = (byte)t;
-	t = state[2][1];
-	state[2][1] = state[2][3];
-	state[2][3] = (byte)t;
-	// Shift left by 3
-	t = state[3][0];
-	state[3][0] = state[3][3];
-	state[3][3] = state[3][2];
-	state[3][2] = state[3][1];
-	state[3][1] = (byte)t;
+		// Shift left by 1
+		t = state[1][0];
+		state[1][0] = state[1][1];
+		state[1][1] = state[1][2];
+		state[1][2] = state[1][3];
+		state[1][3] = (byte)t;
+		// Shift left by 2
+		t = state[2][0];
+		state[2][0] = state[2][2];
+		state[2][2] = (byte)t;
+		t = state[2][1];
+		state[2][1] = state[2][3];
+		state[2][3] = (byte)t;
+		// Shift left by 3
+		t = state[3][0];
+		state[3][0] = state[3][3];
+		state[3][3] = state[3][2];
+		state[3][2] = state[3][1];
+		state[3][1] = (byte)t;
 	}
 
 	// All rows are shifted cylindrically to the right.
 	//void InvShiftRows(BYTE state[][4])
-	private static void InvShiftRows()
+	private void InvShiftRows()
 	{
-	int t;
+		int t;
 
-	// Shift right by 1
-	t = state[1][3];
-	state[1][3] = state[1][2];
-	state[1][2] = state[1][1];
-	state[1][1] = state[1][0];
-	state[1][0] = (byte)t;
-	// Shift right by 2
-	t = state[2][3];
-	state[2][3] = state[2][1];
-	state[2][1] = (byte)t;
-	t = state[2][2];
-	state[2][2] = state[2][0];
-	state[2][0] = (byte)t;
-	// Shift right by 3
-	t = state[3][3];
-	state[3][3] = state[3][0];
-	state[3][0] = state[3][1];
-	state[3][1] = state[3][2];
-	state[3][2] = (byte)t;
+		// Shift right by 1
+		t = state[1][3];
+		state[1][3] = state[1][2];
+		state[1][2] = state[1][1];
+		state[1][1] = state[1][0];
+		state[1][0] = (byte)t;
+		// Shift right by 2
+		t = state[2][3];
+		state[2][3] = state[2][1];
+		state[2][1] = (byte)t;
+		t = state[2][2];
+		state[2][2] = state[2][0];
+		state[2][0] = (byte)t;
+		// Shift right by 3
+		t = state[3][3];
+		state[3][3] = state[3][0];
+		state[3][0] = state[3][1];
+		state[3][1] = state[3][2];
+		state[3][2] = (byte)t;
 	}
 
 	/////////////////
@@ -456,233 +459,233 @@ static int AES_256_ROUNDS=14;
 	// Addition is equivilent to XOR. (Must always make a copy of the column as the original
 	// values will be destoyed.)
 	//void MixColumns(BYTE state[][4])
-	private static void MixColumns()
+	private void MixColumns()
 	{
-	byte[] col=new byte[4];
+		byte[] col=new byte[4];
 
-	// Column 1
-	col[0] = state[0][0];
-	col[1] = state[1][0];
-	col[2] = state[2][0];
-	col[3] = state[3][0];
-	
-	int i0=col[0]&0xFF;
-	int i1=col[1]&0xFF;
-	int i2=col[2]&0xFF;
-	int i3=col[3]&0xFF;
-	
-	state[0][0] = gf_mul[i0][0];
-	state[0][0] ^= gf_mul[i1][1];
-	state[0][0] ^= col[2];
-	state[0][0] ^= col[3];
-	state[1][0] = col[0];
-	state[1][0] ^= gf_mul[i1][0];
-	state[1][0] ^= gf_mul[i2][1];
-	state[1][0] ^= col[3];
-	state[2][0] = col[0];
-	state[2][0] ^= col[1];
-	state[2][0] ^= gf_mul[i2][0];
-	state[2][0] ^= gf_mul[i3][1];
-	state[3][0] = gf_mul[i0][1];
-	state[3][0] ^= col[1];
-	state[3][0] ^= col[2];
-	state[3][0] ^= gf_mul[i3][0];
-	// Column 2
-	col[0] = state[0][1];
-	col[1] = state[1][1];
-	col[2] = state[2][1];
-	col[3] = state[3][1];
-	
-	i0=col[0]&0xFF;
-	i1=col[1]&0xFF;
-	i2=col[2]&0xFF;
-	i3=col[3]&0xFF;
-	
-	state[0][1] = gf_mul[i0][0];
-	state[0][1] ^= gf_mul[i1][1];
-	state[0][1] ^= col[2];
-	state[0][1] ^= col[3];
-	state[1][1] = col[0];
-	state[1][1] ^= gf_mul[i1][0];
-	state[1][1] ^= gf_mul[i2][1];
-	state[1][1] ^= col[3];
-	state[2][1] = col[0];
-	state[2][1] ^= col[1];
-	state[2][1] ^= gf_mul[i2][0];
-	state[2][1] ^= gf_mul[i3][1];
-	state[3][1] = gf_mul[i0][1];
-	state[3][1] ^= col[1];
-	state[3][1] ^= col[2];
-	state[3][1] ^= gf_mul[i3][0];
-	// Column 3
-	col[0] = state[0][2];
-	col[1] = state[1][2];
-	col[2] = state[2][2];
-	col[3] = state[3][2];
-	
-	i0=col[0]&0xFF;
-	i1=col[1]&0xFF;
-	i2=col[2]&0xFF;
-	i3=col[3]&0xFF;
-	
-	state[0][2] = gf_mul[i0][0];
-	state[0][2] ^= gf_mul[i1][1];
-	state[0][2] ^= col[2];
-	state[0][2] ^= col[3];
-	state[1][2] = col[0];
-	state[1][2] ^= gf_mul[i1][0];
-	state[1][2] ^= gf_mul[i2][1];
-	state[1][2] ^= col[3];
-	state[2][2] = col[0];
-	state[2][2] ^= col[1];
-	state[2][2] ^= gf_mul[i2][0];
-	state[2][2] ^= gf_mul[i3][1];
-	state[3][2] = gf_mul[i0][1];
-	state[3][2] ^= col[1];
-	state[3][2] ^= col[2];
-	state[3][2] ^= gf_mul[i3][0];
-	// Column 4
-	col[0] = state[0][3];
-	col[1] = state[1][3];
-	col[2] = state[2][3];
-	col[3] = state[3][3];
-	
-	i0=col[0]&0xFF;
-	i1=col[1]&0xFF;
-	i2=col[2]&0xFF;
-	i3=col[3]&0xFF;
-	
-	state[0][3] = gf_mul[i0][0];
-	state[0][3] ^= gf_mul[i1][1];
-	state[0][3] ^= col[2];
-	state[0][3] ^= col[3];
-	state[1][3] = col[0];
-	state[1][3] ^= gf_mul[i1][0];
-	state[1][3] ^= gf_mul[i2][1];
-	state[1][3] ^= col[3];
-	state[2][3] = col[0];
-	state[2][3] ^= col[1];
-	state[2][3] ^= gf_mul[i2][0];
-	state[2][3] ^= gf_mul[i3][1];
-	state[3][3] = gf_mul[i0][1];
-	state[3][3] ^= col[1];
-	state[3][3] ^= col[2];
-	state[3][3] ^= gf_mul[i3][0];
+		// Column 1
+		col[0] = state[0][0];
+		col[1] = state[1][0];
+		col[2] = state[2][0];
+		col[3] = state[3][0];
+
+		int i0=col[0]&0xFF;
+		int i1=col[1]&0xFF;
+		int i2=col[2]&0xFF;
+		int i3=col[3]&0xFF;
+
+		state[0][0] = gf_mul[i0][0];
+		state[0][0] ^= gf_mul[i1][1];
+		state[0][0] ^= col[2];
+		state[0][0] ^= col[3];
+		state[1][0] = col[0];
+		state[1][0] ^= gf_mul[i1][0];
+		state[1][0] ^= gf_mul[i2][1];
+		state[1][0] ^= col[3];
+		state[2][0] = col[0];
+		state[2][0] ^= col[1];
+		state[2][0] ^= gf_mul[i2][0];
+		state[2][0] ^= gf_mul[i3][1];
+		state[3][0] = gf_mul[i0][1];
+		state[3][0] ^= col[1];
+		state[3][0] ^= col[2];
+		state[3][0] ^= gf_mul[i3][0];
+		// Column 2
+		col[0] = state[0][1];
+		col[1] = state[1][1];
+		col[2] = state[2][1];
+		col[3] = state[3][1];
+
+		i0=col[0]&0xFF;
+		i1=col[1]&0xFF;
+		i2=col[2]&0xFF;
+		i3=col[3]&0xFF;
+
+		state[0][1] = gf_mul[i0][0];
+		state[0][1] ^= gf_mul[i1][1];
+		state[0][1] ^= col[2];
+		state[0][1] ^= col[3];
+		state[1][1] = col[0];
+		state[1][1] ^= gf_mul[i1][0];
+		state[1][1] ^= gf_mul[i2][1];
+		state[1][1] ^= col[3];
+		state[2][1] = col[0];
+		state[2][1] ^= col[1];
+		state[2][1] ^= gf_mul[i2][0];
+		state[2][1] ^= gf_mul[i3][1];
+		state[3][1] = gf_mul[i0][1];
+		state[3][1] ^= col[1];
+		state[3][1] ^= col[2];
+		state[3][1] ^= gf_mul[i3][0];
+		// Column 3
+		col[0] = state[0][2];
+		col[1] = state[1][2];
+		col[2] = state[2][2];
+		col[3] = state[3][2];
+
+		i0=col[0]&0xFF;
+		i1=col[1]&0xFF;
+		i2=col[2]&0xFF;
+		i3=col[3]&0xFF;
+
+		state[0][2] = gf_mul[i0][0];
+		state[0][2] ^= gf_mul[i1][1];
+		state[0][2] ^= col[2];
+		state[0][2] ^= col[3];
+		state[1][2] = col[0];
+		state[1][2] ^= gf_mul[i1][0];
+		state[1][2] ^= gf_mul[i2][1];
+		state[1][2] ^= col[3];
+		state[2][2] = col[0];
+		state[2][2] ^= col[1];
+		state[2][2] ^= gf_mul[i2][0];
+		state[2][2] ^= gf_mul[i3][1];
+		state[3][2] = gf_mul[i0][1];
+		state[3][2] ^= col[1];
+		state[3][2] ^= col[2];
+		state[3][2] ^= gf_mul[i3][0];
+		// Column 4
+		col[0] = state[0][3];
+		col[1] = state[1][3];
+		col[2] = state[2][3];
+		col[3] = state[3][3];
+
+		i0=col[0]&0xFF;
+		i1=col[1]&0xFF;
+		i2=col[2]&0xFF;
+		i3=col[3]&0xFF;
+
+		state[0][3] = gf_mul[i0][0];
+		state[0][3] ^= gf_mul[i1][1];
+		state[0][3] ^= col[2];
+		state[0][3] ^= col[3];
+		state[1][3] = col[0];
+		state[1][3] ^= gf_mul[i1][0];
+		state[1][3] ^= gf_mul[i2][1];
+		state[1][3] ^= col[3];
+		state[2][3] = col[0];
+		state[2][3] ^= col[1];
+		state[2][3] ^= gf_mul[i2][0];
+		state[2][3] ^= gf_mul[i3][1];
+		state[3][3] = gf_mul[i0][1];
+		state[3][3] ^= col[1];
+		state[3][3] ^= col[2];
+		state[3][3] ^= gf_mul[i3][0];
 	}
 
 	//void InvMixColumns(BYTE state[][4])
-	private static void InvMixColumns()
+	private void InvMixColumns()
 	{
-	byte[] col=new byte[4];
+		byte[] col=new byte[4];
 
-	// Column 1
-	col[0] = state[0][0];
-	col[1] = state[1][0];
-	col[2] = state[2][0];
-	col[3] = state[3][0];
-	
-	int i0=col[0]&0xFF;
-	int i1=col[1]&0xFF;
-	int i2=col[2]&0xFF;
-	int i3=col[3]&0xFF;
-	
-	state[0][0] = gf_mul[i0][5];
-	state[0][0] ^= gf_mul[i1][3];
-	state[0][0] ^= gf_mul[i2][4];
-	state[0][0] ^= gf_mul[i3][2];
-	state[1][0] = gf_mul[i0][2];
-	state[1][0] ^= gf_mul[i1][5];
-	state[1][0] ^= gf_mul[i2][3];
-	state[1][0] ^= gf_mul[i3][4];
-	state[2][0] = gf_mul[i0][4];
-	state[2][0] ^= gf_mul[i1][2];
-	state[2][0] ^= gf_mul[i2][5];
-	state[2][0] ^= gf_mul[i3][3];
-	state[3][0] = gf_mul[i0][3];
-	state[3][0] ^= gf_mul[i1][4];
-	state[3][0] ^= gf_mul[i2][2];
-	state[3][0] ^= gf_mul[i3][5];
-	// Column 2
-	col[0] = state[0][1];
-	col[1] = state[1][1];
-	col[2] = state[2][1];
-	col[3] = state[3][1];
-	
-	i0=col[0]&0xFF;
-	i1=col[1]&0xFF;
-	i2=col[2]&0xFF;
-	i3=col[3]&0xFF;
-	
-	state[0][1] = gf_mul[i0][5];
-	state[0][1] ^= gf_mul[i1][3];
-	state[0][1] ^= gf_mul[i2][4];
-	state[0][1] ^= gf_mul[i3][2];
-	state[1][1] = gf_mul[i0][2];
-	state[1][1] ^= gf_mul[i1][5];
-	state[1][1] ^= gf_mul[i2][3];
-	state[1][1] ^= gf_mul[i3][4];
-	state[2][1] = gf_mul[i0][4];
-	state[2][1] ^= gf_mul[i1][2];
-	state[2][1] ^= gf_mul[i2][5];
-	state[2][1] ^= gf_mul[i3][3];
-	state[3][1] = gf_mul[i0][3];
-	state[3][1] ^= gf_mul[i1][4];
-	state[3][1] ^= gf_mul[i2][2];
-	state[3][1] ^= gf_mul[i3][5];
-	// Column 3
-	col[0] = state[0][2];
-	col[1] = state[1][2];
-	col[2] = state[2][2];
-	col[3] = state[3][2];
-	
-	i0=col[0]&0xFF;
-	i1=col[1]&0xFF;
-	i2=col[2]&0xFF;
-	i3=col[3]&0xFF;
-	
-	state[0][2] = gf_mul[i0][5];
-	state[0][2] ^= gf_mul[i1][3];
-	state[0][2] ^= gf_mul[i2][4];
-	state[0][2] ^= gf_mul[i3][2];
-	state[1][2] = gf_mul[i0][2];
-	state[1][2] ^= gf_mul[i1][5];
-	state[1][2] ^= gf_mul[i2][3];
-	state[1][2] ^= gf_mul[i3][4];
-	state[2][2] = gf_mul[i0][4];
-	state[2][2] ^= gf_mul[i1][2];
-	state[2][2] ^= gf_mul[i2][5];
-	state[2][2] ^= gf_mul[i3][3];
-	state[3][2] = gf_mul[i0][3];
-	state[3][2] ^= gf_mul[i1][4];
-	state[3][2] ^= gf_mul[i2][2];
-	state[3][2] ^= gf_mul[i3][5];
-	// Column 4
-	col[0] = state[0][3];
-	col[1] = state[1][3];
-	col[2] = state[2][3];
-	col[3] = state[3][3];
-	
-	i0=col[0]&0xFF;
-	i1=col[1]&0xFF;
-	i2=col[2]&0xFF;
-	i3=col[3]&0xFF;
-	
-	state[0][3] = gf_mul[i0][5];
-	state[0][3] ^= gf_mul[i1][3];
-	state[0][3] ^= gf_mul[i2][4];
-	state[0][3] ^= gf_mul[i3][2];
-	state[1][3] = gf_mul[i0][2];
-	state[1][3] ^= gf_mul[i1][5];
-	state[1][3] ^= gf_mul[i2][3];
-	state[1][3] ^= gf_mul[i3][4];
-	state[2][3] = gf_mul[i0][4];
-	state[2][3] ^= gf_mul[i1][2];
-	state[2][3] ^= gf_mul[i2][5];
-	state[2][3] ^= gf_mul[i3][3];
-	state[3][3] = gf_mul[i0][3];
-	state[3][3] ^= gf_mul[i1][4];
-	state[3][3] ^= gf_mul[i2][2];
-	state[3][3] ^= gf_mul[i3][5];
+		// Column 1
+		col[0] = state[0][0];
+		col[1] = state[1][0];
+		col[2] = state[2][0];
+		col[3] = state[3][0];
+
+		int i0=col[0]&0xFF;
+		int i1=col[1]&0xFF;
+		int i2=col[2]&0xFF;
+		int i3=col[3]&0xFF;
+
+		state[0][0] = gf_mul[i0][5];
+		state[0][0] ^= gf_mul[i1][3];
+		state[0][0] ^= gf_mul[i2][4];
+		state[0][0] ^= gf_mul[i3][2];
+		state[1][0] = gf_mul[i0][2];
+		state[1][0] ^= gf_mul[i1][5];
+		state[1][0] ^= gf_mul[i2][3];
+		state[1][0] ^= gf_mul[i3][4];
+		state[2][0] = gf_mul[i0][4];
+		state[2][0] ^= gf_mul[i1][2];
+		state[2][0] ^= gf_mul[i2][5];
+		state[2][0] ^= gf_mul[i3][3];
+		state[3][0] = gf_mul[i0][3];
+		state[3][0] ^= gf_mul[i1][4];
+		state[3][0] ^= gf_mul[i2][2];
+		state[3][0] ^= gf_mul[i3][5];
+		// Column 2
+		col[0] = state[0][1];
+		col[1] = state[1][1];
+		col[2] = state[2][1];
+		col[3] = state[3][1];
+
+		i0=col[0]&0xFF;
+		i1=col[1]&0xFF;
+		i2=col[2]&0xFF;
+		i3=col[3]&0xFF;
+
+		state[0][1] = gf_mul[i0][5];
+		state[0][1] ^= gf_mul[i1][3];
+		state[0][1] ^= gf_mul[i2][4];
+		state[0][1] ^= gf_mul[i3][2];
+		state[1][1] = gf_mul[i0][2];
+		state[1][1] ^= gf_mul[i1][5];
+		state[1][1] ^= gf_mul[i2][3];
+		state[1][1] ^= gf_mul[i3][4];
+		state[2][1] = gf_mul[i0][4];
+		state[2][1] ^= gf_mul[i1][2];
+		state[2][1] ^= gf_mul[i2][5];
+		state[2][1] ^= gf_mul[i3][3];
+		state[3][1] = gf_mul[i0][3];
+		state[3][1] ^= gf_mul[i1][4];
+		state[3][1] ^= gf_mul[i2][2];
+		state[3][1] ^= gf_mul[i3][5];
+		// Column 3
+		col[0] = state[0][2];
+		col[1] = state[1][2];
+		col[2] = state[2][2];
+		col[3] = state[3][2];
+
+		i0=col[0]&0xFF;
+		i1=col[1]&0xFF;
+		i2=col[2]&0xFF;
+		i3=col[3]&0xFF;
+
+		state[0][2] = gf_mul[i0][5];
+		state[0][2] ^= gf_mul[i1][3];
+		state[0][2] ^= gf_mul[i2][4];
+		state[0][2] ^= gf_mul[i3][2];
+		state[1][2] = gf_mul[i0][2];
+		state[1][2] ^= gf_mul[i1][5];
+		state[1][2] ^= gf_mul[i2][3];
+		state[1][2] ^= gf_mul[i3][4];
+		state[2][2] = gf_mul[i0][4];
+		state[2][2] ^= gf_mul[i1][2];
+		state[2][2] ^= gf_mul[i2][5];
+		state[2][2] ^= gf_mul[i3][3];
+		state[3][2] = gf_mul[i0][3];
+		state[3][2] ^= gf_mul[i1][4];
+		state[3][2] ^= gf_mul[i2][2];
+		state[3][2] ^= gf_mul[i3][5];
+		// Column 4
+		col[0] = state[0][3];
+		col[1] = state[1][3];
+		col[2] = state[2][3];
+		col[3] = state[3][3];
+
+		i0=col[0]&0xFF;
+		i1=col[1]&0xFF;
+		i2=col[2]&0xFF;
+		i3=col[3]&0xFF;
+
+		state[0][3] = gf_mul[i0][5];
+		state[0][3] ^= gf_mul[i1][3];
+		state[0][3] ^= gf_mul[i2][4];
+		state[0][3] ^= gf_mul[i3][2];
+		state[1][3] = gf_mul[i0][2];
+		state[1][3] ^= gf_mul[i1][5];
+		state[1][3] ^= gf_mul[i2][3];
+		state[1][3] ^= gf_mul[i3][4];
+		state[2][3] = gf_mul[i0][4];
+		state[2][3] ^= gf_mul[i1][2];
+		state[2][3] ^= gf_mul[i2][5];
+		state[2][3] ^= gf_mul[i3][3];
+		state[3][3] = gf_mul[i0][3];
+		state[3][3] ^= gf_mul[i1][4];
+		state[3][3] ^= gf_mul[i2][2];
+		state[3][3] ^= gf_mul[i3][5];
 	}
 
 	/////////////////
@@ -690,38 +693,36 @@ static int AES_256_ROUNDS=14;
 	/////////////////
 
 	//void aes_encrypt(const BYTE in[], BYTE out[], const WORD key[], int keysize)
-	byte[] aes_encrypt(byte in[], int key[], int keysize)
+	byte[] aes_encrypt(byte in[], byte out[])
 	{
-	//char[][] state=new char[4][4];
-	byte[] out=new byte[16];
-	
-	// Copy input array (should be 16 bytes long) to a matrix (sequential bytes are ordered
-	// by row, not col) called "state" for processing.
-	// *** Implementation note: The official AES documentation references the state by
-	// column, then row. Accessing an element in C requires row then column. Thus, all state
-	// references in AES must have the column and row indexes reversed for C implementation.
-	state[0][0] = in[0];
-	state[1][0] = in[1];
-	state[2][0] = in[2];
-	state[3][0] = in[3];
-	state[0][1] = in[4];
-	state[1][1] = in[5];
-	state[2][1] = in[6];
-	state[3][1] = in[7];
-	state[0][2] = in[8];
-	state[1][2] = in[9];
-	state[2][2] = in[10];
-	state[3][2] = in[11];
-	state[0][3] = in[12];
-	state[1][3] = in[13];
-	state[2][3] = in[14];
-	state[3][3] = in[15];
+		//char[][] state=new char[4][4];
+		// Copy input array (should be 16 bytes long) to a matrix (sequential bytes are ordered
+		// by row, not col) called "state" for processing.
+		// *** Implementation note: The official AES documentation references the state by
+		// column, then row. Accessing an element in C requires row then column. Thus, all state
+		// references in AES must have the column and row indexes reversed for C implementation.
+		state[0][0] = in[0];
+		state[1][0] = in[1];
+		state[2][0] = in[2];
+		state[3][0] = in[3];
+		state[0][1] = in[4];
+		state[1][1] = in[5];
+		state[2][1] = in[6];
+		state[3][1] = in[7];
+		state[0][2] = in[8];
+		state[1][2] = in[9];
+		state[2][2] = in[10];
+		state[3][2] = in[11];
+		state[0][3] = in[12];
+		state[1][3] = in[13];
+		state[2][3] = in[14];
+		state[3][3] = in[15];
 
-	// Perform the necessary number of rounds. The round key is added first.
-	// The last round does not perform the MixColumns step.
-	AddRoundKey(key);
-	
-	/*SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[4]);
+		// Perform the necessary number of rounds. The round key is added first.
+		// The last round does not perform the MixColumns step.
+		AddRoundKey(key);
+
+		/*SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[4]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[8]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[12]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[16]);
@@ -730,132 +731,130 @@ static int AES_256_ROUNDS=14;
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[28]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[32]);
 	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[36]);*/
-	
+
 		for (int i=1; i<=9; i++)
 		{
-		int[] aux_key=new int[4];
-		aux_key[0]=key[i*4];
-		aux_key[1]=key[i*4+1];
-		aux_key[2]=key[i*4+2];
-		aux_key[3]=key[i*4+3];
-		SubBytes(); ShiftRows(); MixColumns(); AddRoundKey(aux_key);
-		}
-	
-		if (keysize != 128) 
-		{
-		//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[40]);
-		//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[44]);
-			
-			for (int i=10; i<=11; i++)
-			{
 			int[] aux_key=new int[4];
 			aux_key[0]=key[i*4];
 			aux_key[1]=key[i*4+1];
 			aux_key[2]=key[i*4+2];
 			aux_key[3]=key[i*4+3];
 			SubBytes(); ShiftRows(); MixColumns(); AddRoundKey(aux_key);
-			}
-		
-			if (keysize != 192) 
+		}
+
+		if (keysize != 128) 
+		{
+			//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[40]);
+			//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[44]);
+
+			for (int i=10; i<=11; i++)
 			{
-			//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[48]);
-			//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[52]);
-			//SubBytes(state); ShiftRows(state); AddRoundKey(state,&key[56]);
-				
-				for (int i=12; i<=14; i++)
-				{
 				int[] aux_key=new int[4];
 				aux_key[0]=key[i*4];
 				aux_key[1]=key[i*4+1];
 				aux_key[2]=key[i*4+2];
 				aux_key[3]=key[i*4+3];
-					
+				SubBytes(); ShiftRows(); MixColumns(); AddRoundKey(aux_key);
+			}
+
+			if (keysize != 192) 
+			{
+				//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[48]);
+				//SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[52]);
+				//SubBytes(state); ShiftRows(state); AddRoundKey(state,&key[56]);
+
+				for (int i=12; i<=14; i++)
+				{
+					int[] aux_key=new int[4];
+					aux_key[0]=key[i*4];
+					aux_key[1]=key[i*4+1];
+					aux_key[2]=key[i*4+2];
+					aux_key[3]=key[i*4+3];
+
 					if ( i!=14 ) 
 					{
-					SubBytes(); ShiftRows(); MixColumns(); AddRoundKey(aux_key);
+						SubBytes(); ShiftRows(); MixColumns(); AddRoundKey(aux_key);
 					}
 					else 
 					{
-					SubBytes(); ShiftRows(); AddRoundKey(aux_key);
+						SubBytes(); ShiftRows(); AddRoundKey(aux_key);
 					}
 				}
-				
+
 			}
 			else
 			{
 				for (int i=12; i<=12; i++)
 				{
-				int[] aux_key=new int[4];
-				aux_key[0]=key[i*4];
-				aux_key[1]=key[i*4+1];
-				aux_key[2]=key[i*4+2];
-				aux_key[3]=key[i*4+3];
-				
-				SubBytes(); ShiftRows(); AddRoundKey(aux_key);
+					int[] aux_key=new int[4];
+					aux_key[0]=key[i*4];
+					aux_key[1]=key[i*4+1];
+					aux_key[2]=key[i*4+2];
+					aux_key[3]=key[i*4+3];
+
+					SubBytes(); ShiftRows(); AddRoundKey(aux_key);
 				}
-				
-			
+
+
 			}
 		}
 		else
 		{
 			for (int i=10; i<=10; i++)
 			{
-			int[] aux_key=new int[4];
-			aux_key[0]=key[i*4];
-			aux_key[1]=key[i*4+1];
-			aux_key[2]=key[i*4+2];
-			aux_key[3]=key[i*4+3];
-			
-			SubBytes(); ShiftRows(); AddRoundKey(aux_key);
+				int[] aux_key=new int[4];
+				aux_key[0]=key[i*4];
+				aux_key[1]=key[i*4+1];
+				aux_key[2]=key[i*4+2];
+				aux_key[3]=key[i*4+3];
+
+				SubBytes(); ShiftRows(); AddRoundKey(aux_key);
 			}
-		
+
 		}
 
-	// Copy the state to the output array.
-	out[0] = state[0][0];
-	out[1] = state[1][0];
-	out[2] = state[2][0];
-	out[3] = state[3][0];
-	out[4] = state[0][1];
-	out[5] = state[1][1];
-	out[6] = state[2][1];
-	out[7] = state[3][1];
-	out[8] = state[0][2];
-	out[9] = state[1][2];
-	out[10] = state[2][2];
-	out[11] = state[3][2];
-	out[12] = state[0][3];
-	out[13] = state[1][3];
-	out[14] = state[2][3];
-	out[15] = state[3][3];
-	return out;
+		// Copy the state to the output array.
+		out[0] = state[0][0];
+		out[1] = state[1][0];
+		out[2] = state[2][0];
+		out[3] = state[3][0];
+		out[4] = state[0][1];
+		out[5] = state[1][1];
+		out[6] = state[2][1];
+		out[7] = state[3][1];
+		out[8] = state[0][2];
+		out[9] = state[1][2];
+		out[10] = state[2][2];
+		out[11] = state[3][2];
+		out[12] = state[0][3];
+		out[13] = state[1][3];
+		out[14] = state[2][3];
+		out[15] = state[3][3];
+		return out;
 	}
 
-	
-	
-	//void aes_decrypt(const BYTE in[], BYTE out[], const WORD key[], int keysize)
-	byte[] aes_decrypt(byte in[], int key[], int keysize)
-	{
-	byte[] out=new byte[16];
 
-	// Copy the input to the state.
-	state[0][0] = in[0];
-	state[1][0] = in[1];
-	state[2][0] = in[2];
-	state[3][0] = in[3];
-	state[0][1] = in[4];
-	state[1][1] = in[5];
-	state[2][1] = in[6];
-	state[3][1] = in[7];
-	state[0][2] = in[8];
-	state[1][2] = in[9];
-	state[2][2] = in[10];
-	state[3][2] = in[11];
-	state[0][3] = in[12];
-	state[1][3] = in[13];
-	state[2][3] = in[14];
-	state[3][3] = in[15];
+
+	//void aes_decrypt(const BYTE in[], BYTE out[], const WORD key[], int keysize)
+	byte[] aes_decrypt(byte in[], byte out[])
+	{
+		// Copy the input to the state.
+		state[0][0] = in[0];
+		state[1][0] = in[1];
+		state[2][0] = in[2];
+		state[3][0] = in[3];
+		state[0][1] = in[4];
+		state[1][1] = in[5];
+		state[2][1] = in[6];
+		state[3][1] = in[7];
+		state[0][2] = in[8];
+		state[1][2] = in[9];
+		state[2][2] = in[10];
+		state[3][2] = in[11];
+		state[0][3] = in[12];
+		state[1][3] = in[13];
+		state[2][3] = in[14];
+		state[3][3] = in[15];
 
 		// Perform the necessary number of rounds. The round key is added first.
 		// The last round does not perform the MixColumns step.
@@ -868,16 +867,16 @@ static int AES_256_ROUNDS=14;
 				//InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[48]);InvMixColumns(state);
 				for (int i=14; i>=12; i--)
 				{
-				int[] aux_key=new int[4];
-				aux_key[0]=key[i*4];
-				aux_key[1]=key[i*4+1];
-				aux_key[2]=key[i*4+2];
-				aux_key[3]=key[i*4+3];
+					int[] aux_key=new int[4];
+					aux_key[0]=key[i*4];
+					aux_key[1]=key[i*4+1];
+					aux_key[2]=key[i*4+2];
+					aux_key[3]=key[i*4+3];
 
 					if ( i==14 ) AddRoundKey(aux_key);
 					else
 					{
-					InvShiftRows();InvSubBytes();AddRoundKey(aux_key);InvMixColumns();
+						InvShiftRows();InvSubBytes();AddRoundKey(aux_key);InvMixColumns();
 					}
 				}
 
@@ -887,42 +886,42 @@ static int AES_256_ROUNDS=14;
 				//AddRoundKey(state,&key[48]);
 				for (int i=12; i>=12; i--)
 				{
+					int[] aux_key=new int[4];
+					aux_key[0]=key[i*4];
+					aux_key[1]=key[i*4+1];
+					aux_key[2]=key[i*4+2];
+					aux_key[3]=key[i*4+3];
+					AddRoundKey(aux_key);
+				}
+			}
+
+			//InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[44]);InvMixColumns(state);
+			//InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[40]);InvMixColumns(state);
+			for (int i=11; i>=10; i--)
+			{
 				int[] aux_key=new int[4];
 				aux_key[0]=key[i*4];
 				aux_key[1]=key[i*4+1];
 				aux_key[2]=key[i*4+2];
 				aux_key[3]=key[i*4+3];
-				AddRoundKey(aux_key);
-				}
+				InvShiftRows();InvSubBytes();AddRoundKey(aux_key);InvMixColumns();
 			}
-		
-		//InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[44]);InvMixColumns(state);
-		//InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[40]);InvMixColumns(state);
-			for (int i=11; i>=10; i--)
-			{
-			int[] aux_key=new int[4];
-			aux_key[0]=key[i*4];
-			aux_key[1]=key[i*4+1];
-			aux_key[2]=key[i*4+2];
-			aux_key[3]=key[i*4+3];
-			InvShiftRows();InvSubBytes();AddRoundKey(aux_key);InvMixColumns();
-			}
-		
+
 		}
 		else 
 		{
 			//AddRoundKey(state,&key[40]);
 			for (int i=10; i>=10; i--)
 			{
-			int[] aux_key=new int[4];
-			aux_key[0]=key[i*4];
-			aux_key[1]=key[i*4+1];
-			aux_key[2]=key[i*4+2];
-			aux_key[3]=key[i*4+3];
-			AddRoundKey(aux_key);
+				int[] aux_key=new int[4];
+				aux_key[0]=key[i*4];
+				aux_key[1]=key[i*4+1];
+				aux_key[2]=key[i*4+2];
+				aux_key[3]=key[i*4+3];
+				AddRoundKey(aux_key);
 			}
 		}
-	
+
 		/*InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[36]);InvMixColumns(state);
 		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[32]);InvMixColumns(state);
 		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[28]);InvMixColumns(state);
@@ -932,41 +931,41 @@ static int AES_256_ROUNDS=14;
 		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[12]);InvMixColumns(state);
 		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[8]);InvMixColumns(state);
 		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[4]);InvMixColumns(state);*/
-		
+
 		for (int i=9; i>=1; i--)
 		{
-		int[] aux_key=new int[4];
-		aux_key[0]=key[i*4];
-		aux_key[1]=key[i*4+1];
-		aux_key[2]=key[i*4+2];
-		aux_key[3]=key[i*4+3];
-		InvShiftRows();InvSubBytes();AddRoundKey(aux_key);InvMixColumns();
+			int[] aux_key=new int[4];
+			aux_key[0]=key[i*4];
+			aux_key[1]=key[i*4+1];
+			aux_key[2]=key[i*4+2];
+			aux_key[3]=key[i*4+3];
+			InvShiftRows();InvSubBytes();AddRoundKey(aux_key);InvMixColumns();
 		}
-	
-	InvShiftRows();InvSubBytes();AddRoundKey(key);
-	// Copy the state to the output array.
-	out[0] = state[0][0];
-	out[1] = state[1][0];
-	out[2] = state[2][0];
-	out[3] = state[3][0];
-	out[4] = state[0][1];
-	out[5] = state[1][1];
-	out[6] = state[2][1];
-	out[7] = state[3][1];
-	out[8] = state[0][2];
-	out[9] = state[1][2];
-	out[10] = state[2][2];
-	out[11] = state[3][2];
-	out[12] = state[0][3];
-	out[13] = state[1][3];
-	out[14] = state[2][3];
-	out[15] = state[3][3];
-	return out;
+
+		InvShiftRows();InvSubBytes();AddRoundKey(key);
+		// Copy the state to the output array.
+		out[0] = state[0][0];
+		out[1] = state[1][0];
+		out[2] = state[2][0];
+		out[3] = state[3][0];
+		out[4] = state[0][1];
+		out[5] = state[1][1];
+		out[6] = state[2][1];
+		out[7] = state[3][1];
+		out[8] = state[0][2];
+		out[9] = state[1][2];
+		out[10] = state[2][2];
+		out[11] = state[3][2];
+		out[12] = state[0][3];
+		out[13] = state[1][3];
+		out[14] = state[2][3];
+		out[15] = state[3][3];
+		return out;
 	}
 
 	/*******************
-	** AES DEBUGGING FUNCTIONS
-	*******************/
+	 ** AES DEBUGGING FUNCTIONS
+	 *******************/
 	/*
 	// This prints the "state" grid as a linear hex string.
 	void print_state(BYTE state[][4])
@@ -985,7 +984,7 @@ static int AES_256_ROUNDS=14;
 			printf("%08x",key[idx]);
 		printf("\n");
 	}
-	*/
+	 */
 
-	
+
 }

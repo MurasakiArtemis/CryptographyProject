@@ -13,6 +13,7 @@ public class CipherDecipher
 	DES firstDES;
 	DES secondDES;
 	DES thirdDES;
+	AES aes;
 	
 	public CipherDecipher(byte[] key)
 	{
@@ -75,7 +76,22 @@ public class CipherDecipher
 		}
 		else
 		{
-			//Set AES subkeys
+			int keysize = 128;
+			switch(algorithm)
+			{
+			case AES128:
+				keysize = 128;
+				break;
+			case AES192:
+				keysize = 192;
+				break;
+			case AES256:
+				keysize = 1256;
+				break;
+			default:
+				break;
+			}
+			aes = new AES(key, keysize);
 		}
 	}
 	
@@ -262,12 +278,6 @@ public class CipherDecipher
 	{
 		switch(algorithm)
 		{
-		case AES128:
-			break;
-		case AES192:
-			break;
-		case AES256:
-			break;
 		case DES168:
 			byte[] aux = new byte[block_size];
 			if(encrypt)
@@ -283,6 +293,11 @@ public class CipherDecipher
 				firstDES.process_message(origin, result, 0);
 			}
 			break;
+		default:
+			if(encrypt)
+				aes.aes_encrypt(origin, result);
+			else
+				aes.aes_decrypt(origin, result);
 		}
 	}
 }
