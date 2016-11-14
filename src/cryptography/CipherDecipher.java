@@ -7,10 +7,38 @@ import java.security.SecureRandom;
 
 public class CipherDecipher 
 {
-	static byte[] key = null;
-	static Algorithm algorithm;
+	byte[] key = null;
+	Algorithm algorithm;
+	short block_size;
+	DES firstDES;
+	DES secondDES;
+	DES thirdDES;
 	
-	private static void write_metadata(File origin_file, File destination_file, byte[] iv, short block_size, OperationModes operation_mode) throws Exception
+	public CipherDecipher(byte[] key)
+	{
+		set_key(key);
+		configure_algorithm();
+		set_block_size();
+	}
+	
+	public CipherDecipher(Algorithm algorithm)
+	{
+		generate_key(algorithm);
+		configure_algorithm();
+		set_block_size();
+	}
+	
+	public  void encipher(File origin_file, File destination_file, OperationModes operation_mode) throws Exception
+	{
+		this.process_request(origin_file, destination_file, operation_mode, true);
+	}
+	
+	public void decipher(File origin_file, File destination_file) throws Exception
+	{
+		this.process_request(origin_file, destination_file, null, false);    	
+	}
+	
+	private void write_metadata(File origin_file, File destination_file, byte[] iv, short block_size, OperationModes operation_mode, int padding) throws Exception
 	{
 		FileOutputStream fOut = new FileOutputStream(destination_file);
 		switch(operation_mode)
@@ -27,200 +55,192 @@ public class CipherDecipher
 		}
 		if(operation_mode != OperationModes.ECB)
 			fOut.write(iv);
-    	int padding = (int) (origin_file.length()%block_size);
     	fOut.write(padding);
     	fOut.close();
 	}
 	
-	public static void set_key(byte[] key)
+	private void configure_algorithm()
 	{
-		CipherDecipher.key = key;
+		if(algorithm == Algorithm.DES168)
+		{
+			byte[] key1 = new byte[8];
+			byte[] key2 = new byte[8];
+			byte[] key3 = new byte[8];
+			System.arraycopy(key, 0, key1, 0, 7);
+			System.arraycopy(key, 7, key2, 0, 7);
+			System.arraycopy(key, 14, key3, 0, 7);
+			firstDES = new DES(key1);
+			secondDES = new DES(key2);
+			thirdDES = new DES(key3);
+		}
+		else
+		{
+			//Set AES subkeys
+		}
+	}
+	
+	private void set_key(byte[] key)
+	{
+		this.key = key;
 		switch(key.length)
 		{
 		case 16:
-			CipherDecipher.algorithm = Algorithm.AES128;
+			this.algorithm = Algorithm.AES128;
 			break;
 		case 21:
-			CipherDecipher.algorithm = Algorithm.DES168;
+			this.algorithm = Algorithm.DES168;
 			break;
 		case 24:
-			CipherDecipher.algorithm = Algorithm.AES192;
+			this.algorithm = Algorithm.AES192;
 			break;
 		case 32:
-			CipherDecipher.algorithm = Algorithm.AES256;
+			this.algorithm = Algorithm.AES256;
 			break;
 		}
 	}
 	
-	public static void generate_key(Algorithm algorithm)
+	private void generate_key(Algorithm algorithm)
 	{
-		CipherDecipher.algorithm = algorithm;
+		this.algorithm = algorithm;
 		SecureRandom random = new SecureRandom();
 		switch(algorithm)
 		{
 		case AES128:
-			CipherDecipher.key = new byte[16];
+			this.key = new byte[16];
 			random.nextBytes(key);
 			break;
 		case AES192:
-			CipherDecipher.key = new byte[24];
+			this.key = new byte[24];
 			random.nextBytes(key);
 			break;
 		case AES256:
-			CipherDecipher.key = new byte[32];
+			this.key = new byte[32];
 			random.nextBytes(key);
 			break;
 		case DES168:
-			CipherDecipher.key = new byte[21];
+			this.key = new byte[21];
 			random.nextBytes(key);
 			break;
 		}
 	}
 
-	public static void encipher(File origin_file, File destination_file, OperationModes operation_mode) throws Exception
+	private void set_block_size()
+	{
+		block_size = 16;
+		switch(algorithm)
+		{
+		case AES128:
+		case AES192:
+		case AES256:
+			block_size = 16;
+			break;
+		case DES168:
+			block_size = 8;
+			break;
+		}
+	}
+	
+	private void process_request(File origin_file, File destination_file, OperationModes operation_mode, boolean encrypt) throws Exception
 	{
 		SecureRandom random = new SecureRandom();
 		FileInputStream fIn = new FileInputStream(origin_file);
 		FileOutputStream fOut = new FileOutputStream(destination_file);
-		short block_size = 16;
-		switch(algorithm)
-		{
-		case AES128:
-		case AES192:
-		case AES256:
-			block_size = 16;
-			break;
-		case DES168:
-			block_size = 8;
-			break;
-		}
-		byte[] origin = new byte[block_size];
-		byte[] result = new byte[block_size];
-		byte[] iv = null;
-        if(operation_mode == OperationModes.CTR)
-        {
-			iv = new byte[block_size];
-        	random.nextBytes(iv);
-        }
-        else if(operation_mode == OperationModes.CBC)
-        {
-        	result = new byte[block_size];
-        	random.nextBytes(result);
-        }
-        CipherDecipher.write_metadata(origin_file, destination_file, operation_mode == OperationModes.CTR? iv : result, block_size, operation_mode);
-		for(int i = 0; i < origin_file.length(); i += block_size)
-	    {
-	        int read_bytes = fIn.read(origin);
-	        if(fIn.available() == 0)
-	            for(int j = read_bytes - 1; j < block_size; j++)
-	                origin[j] = (byte) random.nextInt(0xFF);
-	        switch(operation_mode)
-	        {
-			case CBC:
-				CBC(origin, result, block_size, true);
-				break;
-			case CTR:
-				CTR(origin, iv, result, block_size, true);
-				break;
-			case ECB:
-				cipher(origin, result, block_size, true);
-				break;
-			default:
-				break;
-	        
-	        }
-	        fOut.write(result);
-	    }
-	}
-	
-	public static void decipher(File origin_file, File destination_file) throws Exception
-	{
-		FileInputStream fIn = new FileInputStream(origin_file);
-		FileOutputStream fOut = new FileOutputStream(destination_file);
-		short block_size = 16;
-		switch(algorithm)
-		{
-		case AES128:
-		case AES256:
-		case AES192:
-			block_size = 16;
-			break;
-		case DES168:
-			block_size = 8;
-			break;
-		}
 		byte[] origin = new byte[block_size];
 		byte[] result = new byte[block_size];
 		byte[] iv = new byte[block_size];
-        int readValue = fIn.read();
-        OperationModes operation_mode = null;
-        switch(readValue)
-        {
-        case 0:
-        	operation_mode = OperationModes.CBC;
-        	break;
-        case 1:
-        	operation_mode = OperationModes.CTR;
-        	break;
-        case 2:
-        	operation_mode = OperationModes.ECB;
-        	break;
-        }
-        if(operation_mode != OperationModes.ECB)
-			fIn.read(iv);
-    	int padding = fIn.read();
+		int padding;
+		if(encrypt)
+		{
+	        if(operation_mode == OperationModes.CTR)
+	        {
+	        	random.nextBytes(iv);
+	        }
+	        else if(operation_mode == OperationModes.CBC)
+	        {
+	        	random.nextBytes(result);
+	        }
+	        padding = (int) (origin_file.length()%block_size);
+	        this.write_metadata(origin_file, destination_file, operation_mode == OperationModes.CTR? iv : result, block_size, operation_mode, padding);
+		}
+		else
+		{
+			//Extract information from the enciphered file
+	        int readValue = fIn.read();
+	        switch(readValue)
+	        {
+	        case 0:
+	        	operation_mode = OperationModes.CBC;
+	        	break;
+	        case 1:
+	        	operation_mode = OperationModes.CTR;
+	        	break;
+	        case 2:
+	        	operation_mode = OperationModes.ECB;
+	        	break;
+	        }
+	        if(operation_mode != OperationModes.ECB)
+				fIn.read(iv);
+	    	padding = fIn.read();
+			//Finished extraction
+		}
 		for(int i = 0; i < origin_file.length(); i += block_size)
 	    {
+			if(encrypt)
+			{
+				int read_bytes = fIn.read(origin);
+		        if(fIn.available() == 0)
+		            for(int j = read_bytes - 1; j < block_size; j++)
+		                origin[j] = (byte) random.nextInt(0xFF);
+			}
 	        switch(operation_mode)
 	        {
 			case CBC:
-				CBC(origin, iv, result, block_size, false);
+				CBC(origin, iv, result, block_size, encrypt);
 				break;
 			case CTR:
-				CTR(origin, iv, result, block_size, false);
+				CTR(origin, iv, result, block_size, encrypt);
 				break;
 			case ECB:
-				cipher(origin, result, block_size, false);
+				cipher(origin, result, block_size, encrypt);
 				break;
 			default:
 				break;
 	        
 	        }
-	        if(fIn.available() != 0)
+	        if(encrypt)
+	        	fOut.write(result);
+	        else if(fIn.available() != 0)
 	        	fOut.write(result);
 	        else
 	        	fOut.write(result, 0, block_size - padding);
 	    }
+		fIn.close(); fOut.close();
 	}
-
-	private static void CBC(byte[] origin, byte[] aux, byte[] result, short block_size, boolean encrypt)
+	
+	private void CBC(byte[] origin, byte[] aux, byte[] result, short block_size, boolean encrypt)
 	{
-		if(!encrypt)
+	    if(encrypt)
+	    {
+	    	aux = new byte[block_size];
+	        XOR_Block(origin, result, aux, block_size);
+	        cipher(aux, result, block_size, encrypt);
+	    }
+	    else
 	    {
 	        cipher(origin, result, block_size, encrypt);
 	        XOR_Block(result, aux, result, block_size);
 	        System.arraycopy(origin, 0, aux, 0, block_size);
 	    }
 	}
-	
-	private static void CBC(byte[] origin, byte[] result, short block_size, boolean encrypt)
-	{
-		byte[] aux = new byte[block_size];
-	    if(encrypt)
-	    {
-	        XOR_Block(origin, result, aux, block_size);
-	        cipher(aux, result, block_size, encrypt);
-	    }
-	}
 
-	private static void CTR(byte[] origin, byte[] IV, byte[] result, short block_size, boolean encrypt)
+	private void CTR(byte[] origin, byte[] IV, byte[] result, short block_size, boolean encrypt)
 	{
 	    cipher(IV, result, block_size, true);
 	    XOR_Block(result, origin, result, block_size);
 	    add(IV, (byte)1);
 	}
 
-	private static void add(byte[] array, byte number)
+	private void add(byte[] array, byte number)
 	{
 	    for(int i = array.length - 1; i >= 0; i--)
 	    {
@@ -232,13 +252,13 @@ public class CipherDecipher
 	    }
 	}
 
-	private static void XOR_Block(byte[] argument1,  byte[] argument2, byte[] result, int array_size)
+	private void XOR_Block(byte[] argument1,  byte[] argument2, byte[] result, int array_size)
 	{
 	    for(int i = 0; i < array_size; i++)
 	        result[i] = (byte)(argument1[i] ^ argument2[i]);
 	}
 
-	private static void cipher(byte[] origin, byte[] result, short block_size, boolean encrypt)
+	private void cipher(byte[] origin, byte[] result, short block_size, boolean encrypt)
 	{
 		switch(algorithm)
 		{
@@ -249,27 +269,18 @@ public class CipherDecipher
 		case AES256:
 			break;
 		case DES168:
-			byte[] key1 = new byte[8];
-			byte[] key2 = new byte[8];
-			byte[] key3 = new byte[8];
 			byte[] aux = new byte[block_size];
-			System.arraycopy(key, 0, key1, 0, 7);
-			System.arraycopy(key, 7, key2, 0, 7);
-			System.arraycopy(key, 14, key3, 0, 7);
-			DES first = new DES(key1);
-			DES second = new DES(key2);
-			DES third = new DES(key3);
 			if(encrypt)
 			{
-				first.process_message(origin, result, 1);
-				second.process_message(result, aux, 0);
-				third.process_message(aux, result, 1);
+				firstDES.process_message(origin, result, 1);
+				secondDES.process_message(result, aux, 0);
+				thirdDES.process_message(aux, result, 1);
 			}
 			else
 			{
-				third.process_message(aux, result, 0);
-				second.process_message(result, aux, 1);
-				first.process_message(origin, result, 0);
+				thirdDES.process_message(aux, result, 0);
+				secondDES.process_message(result, aux, 1);
+				firstDES.process_message(origin, result, 0);
 			}
 			break;
 		}
