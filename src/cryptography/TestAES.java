@@ -20,10 +20,10 @@ public class TestAES
 		for (int i=0; i<24; i++) key[i] = (byte)r.nextInt(255);
 	
 	
-	//Encrypt block of 16 bytes
+	//aes_key_setup needed to do enc/dec, we can move this to the constructor... we only need to pass the key like DES
 	int[] setup=aes.aes_key_setup(key, 192);
-			
 	
+	//Encrypt block of 16 bytes
 	byte[] enc=aes.aes_encrypt(message, setup, 192);
 	
 		for (int i=0; i<16; i++) System.out.print(""+(char)enc[i]);
