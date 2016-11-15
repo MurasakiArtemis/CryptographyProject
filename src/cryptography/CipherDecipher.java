@@ -15,6 +15,32 @@ public class CipherDecipher
 	DES thirdDES;
 	AES aes;
 	
+	//Lectura del archivo para descifrar
+	public CipherDecipher(File file /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
+	{
+		FileInputStream fIn = new FileInputStream(file);
+		byte[] key = new byte[(int) file.length()];
+		fIn.read(key);
+		fIn.close();
+		//Descifrar llave con la clave privada
+		set_key(key);
+		configure_algorithm();
+		set_block_size();
+	}
+	
+	//Creación del archivo para cifrar
+	public CipherDecipher(File file, Algorithm algorithm /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
+	{
+		FileOutputStream fOut = new FileOutputStream(file);
+		generate_key(algorithm);
+		configure_algorithm();
+		set_block_size();
+		//Cifrar llave con la clave pública del receptor
+		fOut.write(key);
+		fOut.close();
+	}
+	
+	//Ajuste de la llave para descifrar
 	public CipherDecipher(byte[] key)
 	{
 		set_key(key);
@@ -22,6 +48,7 @@ public class CipherDecipher
 		set_block_size();
 	}
 	
+	//Creación de la llave para cifrar
 	public CipherDecipher(Algorithm algorithm)
 	{
 		generate_key(algorithm);
@@ -29,7 +56,7 @@ public class CipherDecipher
 		set_block_size();
 	}
 	
-	public  void encipher(File origin_file, File destination_file, OperationModes operation_mode) throws Exception
+	public void encipher(File origin_file, File destination_file, OperationModes operation_mode) throws Exception
 	{
 		this.process_request(origin_file, destination_file, operation_mode, true);
 	}
