@@ -7,13 +7,13 @@ import java.security.SecureRandom;
 
 public class CipherDecipher 
 {
-	byte[] key = null;
-	Algorithm algorithm;
-	short block_size;
-	DES firstDES;
-	DES secondDES;
-	DES thirdDES;
-	AES aes;
+	private byte[] key = null;
+	private Algorithm algorithm;
+	private short block_size;
+	private DES firstDES;
+	private DES secondDES;
+	private DES thirdDES;
+	private AES aes;
 	
 	//Lectura del archivo para descifrar
 	public CipherDecipher(File file /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
@@ -113,7 +113,7 @@ public class CipherDecipher
 				keysize = 192;
 				break;
 			case AES256:
-				keysize = 1256;
+				keysize = 256;
 				break;
 			default:
 				break;
@@ -187,7 +187,6 @@ public class CipherDecipher
 	{
 		SecureRandom random = new SecureRandom();
 		FileInputStream fIn = new FileInputStream(origin_file);
-		FileOutputStream fOut = new FileOutputStream(destination_file);
 		byte[] origin = new byte[block_size];
 		byte[] result = new byte[block_size];
 		byte[] iv = new byte[block_size];
@@ -226,6 +225,7 @@ public class CipherDecipher
 	    	padding = fIn.read();
 			//Finished extraction
 		}
+		FileOutputStream fOut = new FileOutputStream(destination_file, true);
 		for(int i = 0; i < origin_file.length(); i += block_size)
 	    {
 			if(encrypt)
@@ -315,9 +315,9 @@ public class CipherDecipher
 			}
 			else
 			{
-				thirdDES.process_message(aux, result, 0);
+				thirdDES.process_message(origin, result, 0);
 				secondDES.process_message(result, aux, 1);
-				firstDES.process_message(origin, result, 0);
+				firstDES.process_message(aux, result, 0);
 			}
 			break;
 		default:
