@@ -198,6 +198,7 @@ public class AES {
 	public AES(byte[] key, int keysize)
 	{
 		this.state=new byte[4][4];
+		this.keysize = keysize;
 		this.key = this.aes_key_setup(key, keysize);
 	}
 
@@ -241,7 +242,7 @@ public class AES {
 		int temp, Rcon[]={0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
 				0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
 				0xab000000,0x4d000000,0x9a000000};
-
+		
 		switch (keysize) 
 		{
 		case 128: Nr = 10; Nk = 4; break;

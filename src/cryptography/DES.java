@@ -5,6 +5,15 @@ import java.util.Random;
 public class DES {
 static short DECRYPTION_MODE=0;
 static short ENCRYPTION_MODE=1;
+
+	private byte[] key;
+	private key_set[] key_sets;
+	public DES(byte[] key)
+	{
+		this.key = key;
+		this.key_sets = generate_sub_keys(key);
+		
+	}
 	
 	int initial_key_permutaion[] = {57, 49,  41, 33,  25,  17,  9,
 									 1, 58,  50, 42,  34,  26, 18,
@@ -102,18 +111,18 @@ static short ENCRYPTION_MODE=1;
 										34,  2, 42, 10, 50, 18, 58, 26,
 										33,  1, 41,  9, 49, 17, 57, 25};
 	
-	char[] generate_key() 
+	byte[] generate_key() 
 	{
 	int i;
-	char[] key=new char[8];
+	byte[] key=new byte[8];
 	Random r=new Random();
 	
-		for (i=0; i<8; i++) key[i] = (char)r.nextInt(255);
+		for (i=0; i<8; i++) key[i] = (byte)r.nextInt(255);
 		
 	return key;
 	}
 	
-	key_set[] generate_sub_keys(char[] main_key) 
+	key_set[] generate_sub_keys(byte[] main_key) 
 	{
 	key_set[] key_sets=new key_set[17];
 	int i, j;
@@ -134,15 +143,15 @@ static short ENCRYPTION_MODE=1;
 	
 		for (i=0; i<3; i++) key_sets[0].c[i] = key_sets[0].k[i];
 	
-	key_sets[0].c[3] = (char) (key_sets[0].k[3] & 0xF0);
+	key_sets[0].c[3] = (byte) (key_sets[0].k[3] & 0xF0);
 	
 		for (i=0; i<3; i++) 
 		{
-		key_sets[0].d[i] = (char) ((key_sets[0].k[i+3] & 0x0F) << 4);
+		key_sets[0].d[i] = (byte) ((key_sets[0].k[i+3] & 0x0F) << 4);
 		key_sets[0].d[i] |= (key_sets[0].k[i+4] & 0xF0) >> 4;
 		}
 	
-	key_sets[0].d[3] = (char) ((key_sets[0].k[6] & 0x0F) << 4);
+	key_sets[0].d[3] = (byte) ((key_sets[0].k[6] & 0x0F) << 4);
 	
 	
 		for (i=1; i<17; i++) 
@@ -219,9 +228,8 @@ static short ENCRYPTION_MODE=1;
 	}
 	
 	//Function that does DES encryption/decryption
-	char[] process_message(char[] message_piece, key_set[] key_sets, int mode) 
+	byte[] process_message(byte[] message_piece, byte[] processed_piece, int mode) 
 	{
-	char[] processed_piece=new char[8];
 	int i, k;
 	int shift_size;
 	char shift_byte;
@@ -416,14 +424,14 @@ static short ENCRYPTION_MODE=1;
 //Class key_set, used to store de 16 keys of each round
 class key_set
 {
-char k[];
-char c[];
-char d[];
+byte k[];
+byte c[];
+byte d[];
 
 	public key_set()
 	{
-	k=new char[8];
-	c=new char [4];
-	d=new char[4];
+	k=new byte[8];
+	c=new byte [4];
+	d=new byte[4];
 	}
 }
