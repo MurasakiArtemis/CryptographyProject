@@ -28,14 +28,14 @@ public class CipherDecipher
 		set_block_size();
 	}
 	
-	//Creación del archivo para cifrar
+	//Creacion del archivo para cifrar
 	public CipherDecipher(File file, Algorithm algorithm /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
 	{
 		FileOutputStream fOut = new FileOutputStream(file);
 		generate_key(algorithm);
 		configure_algorithm();
 		set_block_size();
-		//Cifrar llave con la clave pública del receptor
+		//Cifrar llave con la clave publica del receptor
 		fOut.write(key);
 		fOut.close();
 	}
@@ -48,7 +48,7 @@ public class CipherDecipher
 		set_block_size();
 	}
 	
-	//Creación de la llave para cifrar
+	//Creacion de la llave para cifrar
 	public CipherDecipher(Algorithm algorithm)
 	{
 		generate_key(algorithm);
