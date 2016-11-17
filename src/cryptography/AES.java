@@ -5,10 +5,16 @@ public class AES {
 	private int[] key;
 	private int keysize;
 
+	public AES(byte[] key, int keysize)
+	{
+		this.state=new byte[4][4];
+		this.key = this.aes_key_setup(key, keysize);
+	}
+
 	/**************************** DATA TYPES ****************************/
-	/*private int AES_128_ROUNDS=10;
+	private int AES_128_ROUNDS=10;
 	private int AES_192_ROUNDS=12;
-	private int AES_256_ROUNDS=14;*/
+	private int AES_256_ROUNDS=14;
 
 	/*********************** FUNCTION DECLARATIONS **********************/
 	//void ccm_prepare_first_ctr_blk(BYTE counter[], const BYTE nonce[], int nonce_len, int payload_len_store_size);
@@ -195,10 +201,9 @@ public class AES {
 	};
 
 
-	public AES(byte[] key, int keysize)
+	public AES()
 	{
 		this.state=new byte[4][4];
-		this.key = this.aes_key_setup(key, keysize);
 	}
 
 	/****************************** MACROS ******************************/
@@ -235,13 +240,13 @@ public class AES {
 	// encryption. "key" is the user-supplied input key, "w" is the output key schedule,
 	// "keysize" is the length in bits of "key", must be 128, 192, or 256.
 	//void aes_key_setup(const BYTE key[], WORD w[], int keysize)
-	private int[] aes_key_setup(byte key[], int keysize)
+	int[] aes_key_setup(byte key[], int keysize)
 	{
 		int Nb=4, Nr=0, Nk=0, idx;
 		int temp, Rcon[]={0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
 				0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
 				0xab000000,0x4d000000,0x9a000000};
-
+		this.keysize = keysize;
 		switch (keysize) 
 		{
 		case 128: Nr = 10; Nk = 4; break;
@@ -344,21 +349,21 @@ public class AES {
 		}
 
 		/*state[0][0] = aes_sbox[state[0][0] >> 4][state[0][0] & 0x0F];
-	state[0][1] = aes_sbox[state[0][1] >> 4][state[0][1] & 0x0F];
-	state[0][2] = aes_sbox[state[0][2] >> 4][state[0][2] & 0x0F];
-	state[0][3] = aes_sbox[state[0][3] >> 4][state[0][3] & 0x0F];
-	state[1][0] = aes_sbox[state[1][0] >> 4][state[1][0] & 0x0F];
-	state[1][1] = aes_sbox[state[1][1] >> 4][state[1][1] & 0x0F];
-	state[1][2] = aes_sbox[state[1][2] >> 4][state[1][2] & 0x0F];
-	state[1][3] = aes_sbox[state[1][3] >> 4][state[1][3] & 0x0F];
-	state[2][0] = aes_sbox[state[2][0] >> 4][state[2][0] & 0x0F];
-	state[2][1] = aes_sbox[state[2][1] >> 4][state[2][1] & 0x0F];
-	state[2][2] = aes_sbox[state[2][2] >> 4][state[2][2] & 0x0F];
-	state[2][3] = aes_sbox[state[2][3] >> 4][state[2][3] & 0x0F];
-	state[3][0] = aes_sbox[state[3][0] >> 4][state[3][0] & 0x0F];
-	state[3][1] = aes_sbox[state[3][1] >> 4][state[3][1] & 0x0F];
-	state[3][2] = aes_sbox[state[3][2] >> 4][state[3][2] & 0x0F];
-	state[3][3] = aes_sbox[state[3][3] >> 4][state[3][3] & 0x0F];*/
+state[0][1] = aes_sbox[state[0][1] >> 4][state[0][1] & 0x0F];
+state[0][2] = aes_sbox[state[0][2] >> 4][state[0][2] & 0x0F];
+state[0][3] = aes_sbox[state[0][3] >> 4][state[0][3] & 0x0F];
+state[1][0] = aes_sbox[state[1][0] >> 4][state[1][0] & 0x0F];
+state[1][1] = aes_sbox[state[1][1] >> 4][state[1][1] & 0x0F];
+state[1][2] = aes_sbox[state[1][2] >> 4][state[1][2] & 0x0F];
+state[1][3] = aes_sbox[state[1][3] >> 4][state[1][3] & 0x0F];
+state[2][0] = aes_sbox[state[2][0] >> 4][state[2][0] & 0x0F];
+state[2][1] = aes_sbox[state[2][1] >> 4][state[2][1] & 0x0F];
+state[2][2] = aes_sbox[state[2][2] >> 4][state[2][2] & 0x0F];
+state[2][3] = aes_sbox[state[2][3] >> 4][state[2][3] & 0x0F];
+state[3][0] = aes_sbox[state[3][0] >> 4][state[3][0] & 0x0F];
+state[3][1] = aes_sbox[state[3][1] >> 4][state[3][1] & 0x0F];
+state[3][2] = aes_sbox[state[3][2] >> 4][state[3][2] & 0x0F];
+state[3][3] = aes_sbox[state[3][3] >> 4][state[3][3] & 0x0F];*/
 	}
 
 	//void InvSubBytes(BYTE state[][4])
@@ -375,21 +380,21 @@ public class AES {
 			}
 		}
 		/*state[0][0] = aes_invsbox[state[0][0] >> 4][state[0][0] & 0x0F];
-	state[0][1] = aes_invsbox[state[0][1] >> 4][state[0][1] & 0x0F];
-	state[0][2] = aes_invsbox[state[0][2] >> 4][state[0][2] & 0x0F];
-	state[0][3] = aes_invsbox[state[0][3] >> 4][state[0][3] & 0x0F];
-	state[1][0] = aes_invsbox[state[1][0] >> 4][state[1][0] & 0x0F];
-	state[1][1] = aes_invsbox[state[1][1] >> 4][state[1][1] & 0x0F];
-	state[1][2] = aes_invsbox[state[1][2] >> 4][state[1][2] & 0x0F];
-	state[1][3] = aes_invsbox[state[1][3] >> 4][state[1][3] & 0x0F];
-	state[2][0] = aes_invsbox[state[2][0] >> 4][state[2][0] & 0x0F];
-	state[2][1] = aes_invsbox[state[2][1] >> 4][state[2][1] & 0x0F];
-	state[2][2] = aes_invsbox[state[2][2] >> 4][state[2][2] & 0x0F];
-	state[2][3] = aes_invsbox[state[2][3] >> 4][state[2][3] & 0x0F];
-	state[3][0] = aes_invsbox[state[3][0] >> 4][state[3][0] & 0x0F];
-	state[3][1] = aes_invsbox[state[3][1] >> 4][state[3][1] & 0x0F];
-	state[3][2] = aes_invsbox[state[3][2] >> 4][state[3][2] & 0x0F];
-	state[3][3] = aes_invsbox[state[3][3] >> 4][state[3][3] & 0x0F];*/
+state[0][1] = aes_invsbox[state[0][1] >> 4][state[0][1] & 0x0F];
+state[0][2] = aes_invsbox[state[0][2] >> 4][state[0][2] & 0x0F];
+state[0][3] = aes_invsbox[state[0][3] >> 4][state[0][3] & 0x0F];
+state[1][0] = aes_invsbox[state[1][0] >> 4][state[1][0] & 0x0F];
+state[1][1] = aes_invsbox[state[1][1] >> 4][state[1][1] & 0x0F];
+state[1][2] = aes_invsbox[state[1][2] >> 4][state[1][2] & 0x0F];
+state[1][3] = aes_invsbox[state[1][3] >> 4][state[1][3] & 0x0F];
+state[2][0] = aes_invsbox[state[2][0] >> 4][state[2][0] & 0x0F];
+state[2][1] = aes_invsbox[state[2][1] >> 4][state[2][1] & 0x0F];
+state[2][2] = aes_invsbox[state[2][2] >> 4][state[2][2] & 0x0F];
+state[2][3] = aes_invsbox[state[2][3] >> 4][state[2][3] & 0x0F];
+state[3][0] = aes_invsbox[state[3][0] >> 4][state[3][0] & 0x0F];
+state[3][1] = aes_invsbox[state[3][1] >> 4][state[3][1] & 0x0F];
+state[3][2] = aes_invsbox[state[3][2] >> 4][state[3][2] & 0x0F];
+state[3][3] = aes_invsbox[state[3][3] >> 4][state[3][3] & 0x0F];*/
 	}
 
 	/////////////////
@@ -693,9 +698,10 @@ public class AES {
 	/////////////////
 
 	//void aes_encrypt(const BYTE in[], BYTE out[], const WORD key[], int keysize)
-	byte[] aes_encrypt(byte in[], byte out[])
+	void aes_encrypt(byte in[], byte[] out)
 	{
 		//char[][] state=new char[4][4];
+
 		// Copy input array (should be 16 bytes long) to a matrix (sequential bytes are ordered
 		// by row, not col) called "state" for processing.
 		// *** Implementation note: The official AES documentation references the state by
@@ -723,14 +729,14 @@ public class AES {
 		AddRoundKey(key);
 
 		/*SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[4]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[8]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[12]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[16]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[20]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[24]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[28]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[32]);
-	SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[36]);*/
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[8]);
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[12]);
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[16]);
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[20]);
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[24]);
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[28]);
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[32]);
+SubBytes(state); ShiftRows(state); MixColumns(state); AddRoundKey(state,&key[36]);*/
 
 		for (int i=1; i<=9; i++)
 		{
@@ -830,14 +836,14 @@ public class AES {
 		out[13] = state[1][3];
 		out[14] = state[2][3];
 		out[15] = state[3][3];
-		return out;
 	}
 
 
 
 	//void aes_decrypt(const BYTE in[], BYTE out[], const WORD key[], int keysize)
-	byte[] aes_decrypt(byte in[], byte out[])
+	void aes_decrypt(byte in[], byte[] out)
 	{
+
 		// Copy the input to the state.
 		state[0][0] = in[0];
 		state[1][0] = in[1];
@@ -923,14 +929,14 @@ public class AES {
 		}
 
 		/*InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[36]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[32]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[28]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[24]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[20]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[16]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[12]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[8]);InvMixColumns(state);
-		InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[4]);InvMixColumns(state);*/
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[32]);InvMixColumns(state);
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[28]);InvMixColumns(state);
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[24]);InvMixColumns(state);
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[20]);InvMixColumns(state);
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[16]);InvMixColumns(state);
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[12]);InvMixColumns(state);
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[8]);InvMixColumns(state);
+	InvShiftRows(state);InvSubBytes(state);AddRoundKey(state,&key[4]);InvMixColumns(state);*/
 
 		for (int i=9; i>=1; i--)
 		{
@@ -960,30 +966,29 @@ public class AES {
 		out[13] = state[1][3];
 		out[14] = state[2][3];
 		out[15] = state[3][3];
-		return out;
 	}
 
 	/*******************
 	 ** AES DEBUGGING FUNCTIONS
 	 *******************/
 	/*
-	// This prints the "state" grid as a linear hex string.
-	void print_state(BYTE state[][4])
-	{
-		int idx,idx2;
-		for (idx=0; idx < 4; idx++)
-			for (idx2=0; idx2 < 4; idx2++)
-				printf("%02x",state[idx2][idx]);
-		printf("\n");
-	}
-	// This prints the key (4 consecutive ints) used for a given round as a linear hex string.
-	void print_rnd_key(WORD key[])
-	{
-		int idx;
-		for (idx=0; idx < 4; idx++)
-			printf("%08x",key[idx]);
-		printf("\n");
-	}
+// This prints the "state" grid as a linear hex string.
+void print_state(BYTE state[][4])
+{
+	int idx,idx2;
+	for (idx=0; idx < 4; idx++)
+		for (idx2=0; idx2 < 4; idx2++)
+			printf("%02x",state[idx2][idx]);
+	printf("\n");
+}
+// This prints the key (4 consecutive ints) used for a given round as a linear hex string.
+void print_rnd_key(WORD key[])
+{
+	int idx;
+	for (idx=0; idx < 4; idx++)
+		printf("%08x",key[idx]);
+	printf("\n");
+}
 	 */
 
 

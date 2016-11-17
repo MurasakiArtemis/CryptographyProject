@@ -7,13 +7,13 @@ import java.security.SecureRandom;
 
 public class CipherDecipher 
 {
-	byte[] key = null;
-	Algorithm algorithm;
-	short block_size;
-	DES firstDES;
-	DES secondDES;
-	DES thirdDES;
-	AES aes;
+	private byte[] key = null;
+	private Algorithm algorithm;
+	private short block_size;
+	private DES firstDES;
+	private DES secondDES;
+	private DES thirdDES;
+	private AES aes;
 	
 	//Lectura del archivo para descifrar
 	public CipherDecipher(File file /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
@@ -28,14 +28,14 @@ public class CipherDecipher
 		set_block_size();
 	}
 	
-	//Creación del archivo para cifrar
+	//Creacion del archivo para cifrar
 	public CipherDecipher(File file, Algorithm algorithm /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
 	{
 		FileOutputStream fOut = new FileOutputStream(file);
 		generate_key(algorithm);
 		configure_algorithm();
 		set_block_size();
-		//Cifrar llave con la clave pública del receptor
+		//Cifrar llave con la clave publica del receptor
 		fOut.write(key);
 		fOut.close();
 	}
@@ -48,7 +48,7 @@ public class CipherDecipher
 		set_block_size();
 	}
 	
-	//Creación de la llave para cifrar
+	//Creacion de la llave para cifrar
 	public CipherDecipher(Algorithm algorithm)
 	{
 		generate_key(algorithm);
@@ -113,7 +113,7 @@ public class CipherDecipher
 				keysize = 192;
 				break;
 			case AES256:
-				keysize = 1256;
+				keysize = 256;
 				break;
 			default:
 				break;
@@ -187,11 +187,10 @@ public class CipherDecipher
 	{
 		SecureRandom random = new SecureRandom();
 		FileInputStream fIn = new FileInputStream(origin_file);
-		FileOutputStream fOut = new FileOutputStream(destination_file);
 		byte[] origin = new byte[block_size];
 		byte[] result = new byte[block_size];
 		byte[] iv = new byte[block_size];
-		int padding;
+		byte padding;
 		if(encrypt)
 		{
 	        if(operation_mode == OperationModes.CTR)
@@ -202,7 +201,7 @@ public class CipherDecipher
 	        {
 	        	random.nextBytes(result);
 	        }
-	        padding = (int) (origin_file.length()%block_size);
+	        padding = (byte) (block_size - (origin_file.length()%block_size));
 	        this.write_metadata(origin_file, destination_file, operation_mode == OperationModes.CTR? iv : result, block_size, operation_mode, padding);
 		}
 		else
@@ -223,16 +222,22 @@ public class CipherDecipher
 	        }
 	        if(operation_mode != OperationModes.ECB)
 				fIn.read(iv);
-	    	padding = fIn.read();
+	    	padding = (byte) fIn.read();
 			//Finished extraction
 		}
-		for(int i = 0; i < origin_file.length(); i += block_size)
+		FileOutputStream fOut;
+		if(encrypt)
+			fOut = new FileOutputStream(destination_file, true);
+		else
+			fOut = new FileOutputStream(destination_file);
+		//for(int i = 0; i < origin_file.length(); i += block_size)
+		while(fIn.available() != 0)
 	    {
+			int read_bytes = fIn.read(origin);
 			if(encrypt)
 			{
-				int read_bytes = fIn.read(origin);
 		        if(fIn.available() == 0)
-		            for(int j = read_bytes - 1; j < block_size; j++)
+		            for(int j = read_bytes; j < block_size; j++)
 		                origin[j] = (byte) random.nextInt(0xFF);
 			}
 	        switch(operation_mode)
@@ -252,7 +257,7 @@ public class CipherDecipher
 	        }
 	        if(encrypt)
 	        	fOut.write(result);
-	        else if(fIn.available() != 0)
+	        else if(fIn.available() > 0)
 	        	fOut.write(result);
 	        else
 	        	fOut.write(result, 0, block_size - padding);
@@ -306,18 +311,19 @@ public class CipherDecipher
 		switch(algorithm)
 		{
 		case DES168:
-			byte[] aux = new byte[block_size];
+			byte[] aux1 = new byte[block_size];
+			byte[] aux2 = new byte[block_size];
 			if(encrypt)
 			{
-				firstDES.process_message(origin, result, 1);
-				secondDES.process_message(result, aux, 0);
-				thirdDES.process_message(aux, result, 1);
+				firstDES.process_message(origin, aux1, 1);
+				secondDES.process_message(aux1, aux2, 0);
+				thirdDES.process_message(aux2, result, 1);
 			}
 			else
 			{
-				thirdDES.process_message(aux, result, 0);
-				secondDES.process_message(result, aux, 1);
-				firstDES.process_message(origin, result, 0);
+				thirdDES.process_message(origin, aux1, 0);
+				secondDES.process_message(aux1, aux2, 1);
+				firstDES.process_message(aux2, result, 0);
 			}
 			break;
 		default:
