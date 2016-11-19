@@ -8,20 +8,29 @@ public class TestWn {
 
 	public static void main(String[] args) throws Exception 
 	{
-		if(args.length != 3)
+		if(args.length != 5)
 		{
-			System.out.println("Modo de uso: <Algoritmo> <Modo de operacion> <Archivo.extension>");
+			System.out.println("Modo de uso: <Algoritmo> <Modo de operacion> <Archivo.extension> <Llave> <-d|-e>");
 			return;
 		}
 		Algorithm algorithm = Algorithm.valueOf(args[0]);
 		OperationModes operation_mode = OperationModes.valueOf(args[1]);
 		String[] filename = args[2].split("\\.");
-		CipherDecipher cipher_decipher = new CipherDecipher(algorithm);
+		File keyfile = new File(args[3]);
+		boolean encrypt = args[4].compareToIgnoreCase("-e") == 0;
 		File origin_file = new File(filename[0] + "." + filename[1]);
-		File destination_file = new File(filename[0] + "_" + operation_mode + "_" + algorithm + "_Cipher." + filename[1]);
-		File recovered_file = new File(filename[0] + "_" + operation_mode + "_" + algorithm + "_Decipher." + filename[1]);
-		cipher_decipher.encipher(origin_file, destination_file, operation_mode);
-		cipher_decipher.decipher(destination_file, recovered_file);
+		if(encrypt)
+		{
+			CipherDecipher cipher = new CipherDecipher(keyfile, algorithm);
+			File destination_file = new File(filename[0] + "_" + operation_mode + "_" + algorithm + "_Cipher." + filename[1]);
+			cipher.encipher(origin_file, destination_file, operation_mode);
+		}
+		else
+		{
+			CipherDecipher decipher = new CipherDecipher(keyfile);
+			File recovered_file = new File(filename[0] + "_" + operation_mode + "_" + algorithm + "_Decipher." + filename[1]);
+			decipher.decipher(origin_file, recovered_file);
+		}
 	}
 
 }
