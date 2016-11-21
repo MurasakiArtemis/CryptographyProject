@@ -193,30 +193,32 @@ public class Interfaz {
 	}
 
 	public void cifrar(File archivo_origen){
-		CipherDecipher cipher_decipher=new CipherDecipher(cifrado);
 		StringTokenizer tok=new StringTokenizer(archivo_origen.getName(), ".");
-		File archivo_destino=new File(destino+"\\"+tok.nextToken());
+		File archivo_destino=new File(destino+"\\"+tok.nextToken()+"_Cipher."+tok.nextToken());
+		File llave=new File(destino+"\\llave.txt");
 	    try {
+	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado);
 			cipher_decipher.encipher(archivo_origen, archivo_destino, modo_seleccionado);
+			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
+			consola.append("Archivo "+archivo_destino.getName()+" cifrado con exito\n");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	    consola.append("Archivo "+archivo_destino.getName()+" cifrado con exito\n");
 	}
 	
 	public void descifrar(File archivo_origen){
-		CipherDecipher cipher_decipher=new CipherDecipher(cifrado);
-		//cipher_decipher.generate_key(cifrado);
 		StringTokenizer tok=new StringTokenizer(archivo_origen.getName(), ".");
-		File archivo_destino=new File(destino+"\\"+tok.nextToken()+"2.txt");
+		File archivo_destino=new File(destino+"\\"+tok.nextToken()+"_Decipher."+tok.nextToken());
+		File llave=new File(destino+"\\llave.txt");
 	    try {
+	    	CipherDecipher cipher_decipher=new CipherDecipher(llave);
 			cipher_decipher.decipher(archivo_origen, archivo_destino);
+			consola.append("Archivo "+archivo_destino.getName()+" descifrado con exito\n");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-	    consola.append("Archivo "+archivo_destino.getName()+" descifrado con exito\n");	
+		}	
 	}
 
 	public static void main(String[] args) {
