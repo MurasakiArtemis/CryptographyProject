@@ -37,6 +37,7 @@ public class Interfaz {
 	OperationModes modo_seleccionado=OperationModes.CBC;
 	Algorithm cifrado=Algorithm.AES192;
 	JTextArea consola=new JTextArea();
+	JTextArea lblfiles;
 
 	public Interfaz() {
 		
@@ -113,12 +114,15 @@ public class Interfaz {
 		});
 		
 		/************	Accion al soltar archivos en "myPanel"	**************/
-		
+		lblfiles = new JTextArea();
+		myPanel.add(lblfiles);
 		new  FileDrop( myPanel, new FileDrop.Listener(){
 			public void  filesDropped( java.io.File[] files ){
 				numArchivos=files.length;
+				lblfiles.setText("");
 				archivos=files;
 				for(int i=0;i<numArchivos;i++){
+					lblfiles.setText(lblfiles.getText() + archivos[i].getName() + "\n");
 					System.out.println(archivos[i].getPath());
 					
 				}
