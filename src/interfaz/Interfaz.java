@@ -15,6 +15,7 @@ import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -89,7 +90,6 @@ public class Interfaz {
 					modo_seleccionado=OperationModes.CBC;
 				else
 					modo_seleccionado=OperationModes.CTR;
-				System.out.println(modo_seleccionado);
 			}
 		});
 		
@@ -108,8 +108,6 @@ public class Interfaz {
 					cifrado=Algorithm.AES256;
 				else if(((String)cif.getSelectedItem()).equals("3DES"))
 					cifrado=Algorithm.DES168;
-				
-				System.out.println(cifrado);
 			}
 		});
 		
@@ -123,8 +121,6 @@ public class Interfaz {
 				archivos=files;
 				for(int i=0;i<numArchivos;i++){
 					lblfiles.setText(lblfiles.getText() + archivos[i].getName() + "\n");
-					System.out.println(archivos[i].getPath());
-					
 				}
 			}
 		});
@@ -136,8 +132,13 @@ public class Interfaz {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				jfc.showSaveDialog(null);
-				destino=jfc.getSelectedFile().getAbsolutePath();
-				rutat.setText(destino);
+				if(jfc.getSelectedFile()==null){
+					JOptionPane.showMessageDialog(null, "No seleccionaste ninguna ruta", "Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else{
+					destino=jfc.getSelectedFile().getAbsolutePath();
+					rutat.setText(destino);
+				}
 			}
 		});
 		
@@ -148,7 +149,12 @@ public class Interfaz {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				fcllavero.showSaveDialog(null);
-				rutaLlavero=fcllavero.getSelectedFile().getAbsolutePath();
+				if(jfc.getSelectedFile()==null){
+					JOptionPane.showMessageDialog(null, "No seleccionaste ninguna ruta", "Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else{
+					rutaLlavero=fcllavero.getSelectedFile().getAbsolutePath();
+				}
 			}
 		});
 		
@@ -158,8 +164,18 @@ public class Interfaz {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				for(int i=0;i<numArchivos;i++){
-					cifrar(archivos[i]);
+				if(archivos==null){
+					JOptionPane.showMessageDialog(null, "No hay archivos para cifrar", "Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else{
+					if(destino==null){
+						JOptionPane.showMessageDialog(null, "No hay ruta de destino", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+					else{
+						for(int i=0;i<numArchivos;i++){
+							cifrar(archivos[i]);
+						}
+					}
 				}
 			}
 		});
@@ -170,8 +186,23 @@ public class Interfaz {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				for(int i=0;i<numArchivos;i++){
-					descifrar(archivos[i]);
+				if(archivos==null){
+					JOptionPane.showMessageDialog(null, "No hay archivos para descifrar", "Error", JOptionPane.ERROR_MESSAGE);
+				}
+				else{
+					if(destino==null){
+						JOptionPane.showMessageDialog(null, "No hay ruta de destino", "Error", JOptionPane.ERROR_MESSAGE);
+					}
+					else{
+						if(new File(destino+"\\llave.txt").exists()){
+							for(int i=0;i<numArchivos;i++){
+								descifrar(archivos[i]);
+							}
+						}
+						else{
+							JOptionPane.showMessageDialog(null, "No existe el archivo para la llave", "Error", JOptionPane.ERROR_MESSAGE);
+						}
+					}
 				}
 			}
 		});
@@ -203,11 +234,13 @@ public class Interfaz {
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado);
 			cipher_decipher.encipher(archivo_origen, archivo_destino, modo_seleccionado);
+			consola.setSelectedTextColor(Color.BLUE);
 			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
 			consola.append("Archivo "+archivo_destino.getName()+" cifrado con exito\n");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			consola.setSelectedTextColor(Color.RED);
+			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
 		}
 	}
 	
