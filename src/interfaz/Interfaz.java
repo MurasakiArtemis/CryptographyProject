@@ -25,7 +25,10 @@ import javax.swing.border.TitledBorder;
 
 import cryptography.Algorithm;
 import cryptography.CipherDecipher;
+import cryptography.Curvas;
 import cryptography.OperationModes;
+import cryptography.Punto;
+import cryptography.PuntoCC;
 import net.iharder.dnd.FileDrop;
 
 public class Interfaz {
@@ -39,9 +42,12 @@ public class Interfaz {
 	Algorithm cifrado=Algorithm.AES192;
 	JTextArea consola=new JTextArea();
 	JTextArea lblfiles;
+	Curvas curva;
+	PuntoCC res;
 
 	public Interfaz() {
 		
+		curva=new Curvas(20, 12, 71191);
 		JPanel  myPanel = new JPanel();
 		JFileChooser jfc=new JFileChooser();
 		JButton rutab=new JButton("Ruta destino");
@@ -234,7 +240,10 @@ public class Interfaz {
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado);
 			cipher_decipher.encipher(archivo_origen, archivo_destino, modo_seleccionado);
-			consola.setSelectedTextColor(Color.BLUE);
+			res=curva.cifrado(llave, new Punto(69943,11355), new Punto(63620,48720));
+			System.out.println(res.getX().getX());
+			System.out.println(res.getX().getY());
+			System.out.println(res.getY());
 			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
 			consola.append("Archivo "+archivo_destino.getName()+" cifrado con exito\n");
 		} catch (Exception e) {
@@ -251,6 +260,8 @@ public class Interfaz {
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave);
 			cipher_decipher.decipher(archivo_origen, archivo_destino);
+			long r=curva.descifrado(res, 7);
+			System.out.println("res= "+r);
 			consola.append("Archivo "+archivo_destino.getName()+" descifrado con exito\n");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

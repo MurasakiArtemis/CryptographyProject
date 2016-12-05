@@ -1,27 +1,38 @@
 package cryptography;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 
 public class Curvas {
 
 	private ArrayList<Punto> puntos=new ArrayList<Punto>();
+	private int resCuadraticos[];
 	private int a;
 	private int b;
+	private long P;
+	private int numPuntos;
+	private int block_size=2;
 	
-	public Curvas(int a,int b) {
+	public Curvas(int a,int b,long P) {
 		this.a=a;
 		this.b=b;
+		this.P=P;
+		ResCua();
+		CalPuntos();
 	}
 	
-	public Punto Suma(Punto p,Punto q,int P){
+	public Punto Suma(Punto p,Punto q){
 		if(q==null)
 			return p;
-		int negY=p.getY()*(-1);
-		int invY=P-((negY*-1)%P);
-		if(invY==q.getY())
+		long invY=P-(p.getY()%P);
+		if((invY==q.getY())&&(p.getX()==q.getX()))
 			return null;
 		Punto r=new Punto();
-		int aux1=0,aux2=0,phi=0;
+		long aux1=0,aux2=0,phi=0;
 		if((p.getX()==q.getX())){
 			aux1=(3*((int)Math.pow(p.getX(), 2)))+a;
 			aux2=2*p.getY();
@@ -39,7 +50,7 @@ public class Curvas {
 		else
 			aux2=aux2%P;
 		if((aux1%aux2)!=0)
-			phi=(aux1*EucExt(aux2, P))%P;
+			phi=(aux1*EucExt(aux2))%P;
 		else
 			phi=(aux1/aux2)%P;
 		r.setX(((phi*phi)-p.getX()-q.getX())%P);
@@ -51,23 +62,23 @@ public class Curvas {
 		return r;
 	}
 	
-	private int ExpMod(int base,int exponente,int n){
-		int res=1;
+	private long ExpMod(long base,int exponente){
+		long res=1;
 		String aux=Integer.toBinaryString(exponente);
 		for(int i=0;i<aux.length();i++){
-			res=((res*res)%n);
+			res=((res*res)%P);
 			if(aux.charAt(i)=='1'){
-				res=(res*base)%n;
+				res=(res*base)%P;
 			}
 		}
-		System.out.println(res);
+		//System.out.println("res Mod= "+res);
 		return res;
 	}
 	
-	private int EucExt(int a,int n){
-		int x1=1,y1=0,x2=0,y2=1,u=0,v=0,q=0,r=0,x=0,y=0;
+	private long EucExt(long a){
+		long x1=1,y1=0,x2=0,y2=1,u=0,v=0,q=0,r=0,x=0,y=0;
 		u=a;
-		v=n;
+		v=P;
 
 		while(u!=0){
 			q=v/u;
@@ -85,57 +96,194 @@ public class Curvas {
 		y=y2;
 
 		if(x<0)
-			x=n-((x*(-1))%n);
+			x=P-((x*(-1))%P);
 		else
-			x=x%n;
+			x=x%P;
 
 		return x;
 	}
 	
-	private int[] ResCua(int n){
-		int q[]=new int[n/2];
-		for(int i=1;i<=(n/2);i++){
-			q[i-1]=(i*i)%n;
+	private void ResCua(){
+		int q[]=new int[(int)P/2];
+		for(int i=1;i<=(P/2);i++){
+			q[i-1]=(int)((i*i)%P);
 			System.out.println(q[i-1]);
 		}
-		return q;
+		resCuadraticos=q;
+		return;
 	}
 	
-	public ArrayList<Punto> CalPuntos(int n){
+	public ArrayList<Punto> CalPuntos(){
 		ArrayList<Punto> puntos=new ArrayList<Punto>();
-		int aux=0;
-		int rescua[]=ResCua(n);
-		for(int i=0;i<n;i++){
-			aux=(int)(Math.pow(i, 3)+(i*a)+b)%n;
-			System.out.println("i= "+i+" aux= "+aux);
-			for(int j=0;j<rescua.length;j++){
-				if(aux==rescua[j]){
+		long aux=0;
+		for(int i=0;i<P;i++){
+			aux=(ExpMod(i, 3)+(i*a)+b)%P;
+			//System.out.println("i= "+i+" aux= "+aux);
+			for(int j=0;j<resCuadraticos.length;j++){
+				if(aux==resCuadraticos[j]){
 					puntos.add(new Punto(i,j+1));
-					System.out.println("	x= "+i+" y= "+(j+1));
-					puntos.add(new Punto(i,n-(j+1)));
-					System.out.println("	x= "+i+" y= "+(n-(j+1)));
+					//System.out.println("	x= "+i+" y= "+(j+1));
+					puntos.add(new Punto(i,P-(j+1)));
+					//System.out.println("	x= "+i+" y= "+(P-(j+1)));
 				}
 			}
-			System.out.println(puntos.size());
 		}
+		this.puntos=puntos;
+		numPuntos=puntos.size()+1;
 		return puntos;
 	}
-
-	public static void main(String[] args) {
-		Curvas c=new Curvas(2,7);
-		Punto p=new Punto(28,6);
-		Punto q=new Punto(28,6);
-		for(int i=0;i<23;i++){
-			if(q==null)
+	
+	public Punto dobladoPunto(Punto p,long k){
+		Punto xy=p;
+		for(int i=0;i<k-1;i++){
+			if(xy==null)
 				System.out.println("Punto al infinito");
 			else
-				System.out.println((i+1)+"P("+q.getX()+","+q.getY()+")");
-			q=c.Suma(p, q, 31);
+				System.out.println((i+1)+"P("+xy.getX()+","+xy.getY()+")");
+			xy=Suma(p, xy);
 		}
-		/*System.out.println(c.EucExt(2, 31));
-		Punto r=c.Suma(new Punto(2,9), new Punto(0,10), 31);
-		System.out.println(r.getX());
-		System.out.println(r.getY());
-		/*System.out.println(c.EucExt(6, 17));*/
+		System.out.println(k+"P("+xy.getX()+","+xy.getY()+")");
+		return xy;
+	}
+	
+	private Punto pointCompress(Punto p){
+		return new Punto(p.getX(),p.getY()%2);
+	}
+	
+	private Punto pointDescompress(Punto p){
+		long z=(ExpMod(p.getX(), 3)+(a*p.getX())+b)%P;
+		boolean con=true;
+		for(int i=0;i<resCuadraticos.length;i++){
+			if(z==resCuadraticos[i]){
+				con=false;
+				break;
+			}
+		}
+		if(con)
+			return null;
+		long y=ExpMod(z, (int)(P+1)/4);
+		if((y%2)==p.getY())
+			return new Punto(p.getX(),y);
+		else
+			return new Punto(p.getX(),P-y);
+	}
+
+	public PuntoCC cifrado(File file,Punto p,Punto q){
+		Punto kp=null;
+		int x=0;
+		long x0=0;
+		Punto x0y0=null;
+		try{
+			System.out.println(file.getName());
+			FileInputStream fIn = new FileInputStream(file);
+			//FileOutputStream fOut = new FileOutputStream(file)
+			byte[] key = new byte[block_size];
+			SecureRandom random=new SecureRandom();
+			//long k=(random.nextInt()%(P-1))+1;
+			long k=6;
+			//ByteBuffer wrapper=ByteBuffer.wrap(key);
+			long aux=0;
+			do{
+				fIn.read(key);
+				x=ByteBuffer.wrap(key).getShort()&(0x0000ffff);
+				System.out.println("x= "+x);
+				System.out.println("x= "+Integer.toBinaryString(x));
+				kp=dobladoPunto(p, k);
+				x0y0=dobladoPunto(q, k);
+				System.out.println("px= "+pointCompress(kp).getX());
+				System.out.println("py= "+pointCompress(kp).getY());
+				aux=(x*x0y0.getX())&(0x00000000ffffffff);
+				System.out.println(Long.toBinaryString(aux));
+				System.out.println("y= "+aux%P);
+			}while(fIn.available()!=0);
+			fIn.close();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return new PuntoCC(pointCompress(kp),(x*x0y0.getX())%P);
+	}
+	
+	public PuntoCC cifrado2(int x,Punto p,Punto q){
+		Punto kp=null;
+		long x0=0;
+		Punto x0y0=null;
+		try{
+			SecureRandom random=new SecureRandom();
+			//long k=(random.nextInt()%(P-1))+1;
+			long k=6;
+			//ByteBuffer wrapper=ByteBuffer.wrap(key);
+			long aux=0;
+			//do{
+				System.out.println("x= "+x);
+				System.out.println("x= "+Integer.toBinaryString(x));
+				kp=dobladoPunto(p, k);
+				x0y0=dobladoPunto(q, k);
+				System.out.println("px= "+pointCompress(kp).getX());
+				System.out.println("py= "+pointCompress(kp).getY());
+				aux=(x*x0y0.getX())&(0x00000000ffffffff);
+				System.out.println(Long.toBinaryString(aux));
+				System.out.println("y= "+aux%P);
+			//}while(fIn.available()!=0);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return new PuntoCC(pointCompress(kp),(x*x0y0.getX())%P);
+	}
+	
+	public long descifrado(PuntoCC c,int m){
+		Punto p=pointDescompress(c.getX());
+		p=dobladoPunto(p, m);
+		return (EucExt(p.getX())*c.getY())%P;
+	}
+	
+	/*private boolean esCoprimo(int n){
+		if(n==0)
+			return false;
+		else if(P%n!=0)
+			return true;
+		else
+			return false;
+	}*/
+	
+	public static void main(String[] args) {
+		/*Curvas c=new Curvas(1,6,11);
+		ArrayList<Punto> ap=c.CalPuntos();
+		for(int i=0;i<ap.size();i++){
+			System.out.println("x= "+ap.get(i).getX());
+			System.out.println("y= "+ap.get(i).getY());
+		}*/
+		
+		/*Curvas c=new Curvas(20, 12, 71191);
+		System.out.println(c.numPuntos);
+		Punto p=c.dobladoPunto(new Punto(69943,11355), 7);
+		System.out.println("x= "+p.getX());
+		System.out.println("y= "+p.getY());*/
+		
+		Curvas c=new Curvas(20, 12, 71191);
+		PuntoCC res=c.cifrado2(10, new Punto(69943,11355), new Punto(63620,48720));
+		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
+		long r=c.descifrado(res, 7);
+		System.out.println(r);
+		
+		/*Curvas c=new Curvas(2, 7, 31);
+		PuntoCC res=c.cifrado2(10, new Punto(2,9), c.dobladoPunto(new Punto(2,9), 7));
+		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
+		long r=c.descifrado(res, 7);
+		System.out.println(r);*/
+		
+		/*Curvas c=new Curvas(1, 6, 11);
+		PuntoCC res=c.cifrado(9, new Punto(2,7), new Punto(7,2));
+		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
+		c.ResCua();
+		int r=c.descifrado(res, 7);
+		System.out.println(r);*/
+		
+		//Cifrado
+		/*Curvas c=new Curvas(2, 9, 19);
+		PuntoCC res=c.cifrado2(10, new Punto(0,3), new Punto(7,10));
+		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
+		long r=c.descifrado(res, 3);
+		System.out.println(r);*/
+		
 	}
 }
