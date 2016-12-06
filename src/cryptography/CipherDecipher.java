@@ -16,7 +16,7 @@ public class CipherDecipher
 	private AES aes;
 	
 	//Lectura del archivo para descifrar
-	public CipherDecipher(File file /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
+	public CipherDecipher(File file /*, KeyRing key_ring*/) throws Exception
 	{
 		FileInputStream fIn = new FileInputStream(file);
 		byte[] key = new byte[(int) file.length()];
@@ -29,7 +29,7 @@ public class CipherDecipher
 	}
 	
 	//Creacion del archivo para cifrar
-	public CipherDecipher(File file, Algorithm algorithm /*, String nombre_destinatario, HashMap<String, byte[]> key_ring*/) throws Exception
+	public CipherDecipher(File file, Algorithm algorithm /*, String nombre_destinatario, KeyRing key_ring*/) throws Exception
 	{
 		FileOutputStream fOut = new FileOutputStream(file);
 		generate_key(algorithm);

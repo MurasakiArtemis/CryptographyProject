@@ -41,8 +41,8 @@ class UserDescription extends JPanel
 		button.addActionListener(e -> {
 			parent.remove(this);
 			CustomButton caller = (CustomButton)e.getSource();
-			try {
-				String owner = caller.owner;
+			try 
+			{
 				key_ring.delete_public_key(caller.owner);
 			} catch (IOException e1) {
 				System.out.println(e1.getMessage());

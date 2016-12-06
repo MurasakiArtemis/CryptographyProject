@@ -18,6 +18,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
 
+import cryptography.Curvas;
+import cryptography.CurvesKey;
 import cryptography.KeyRing;
 import net.iharder.dnd.FileDrop;
 import net.iharder.dnd.FileDrop.Listener;
@@ -92,8 +94,8 @@ public class KeyRingManager
 		//Botón generar llaves
 		button = new JButton("Generar llaves");
 		button.addActionListener(e -> {
-			byte[] public_key = new byte[10];
-			byte[] private_key = new byte[10];
+			CurvesKey public_key = Curvas.generate_key();
+			CurvesKey private_key = Curvas.generate_key();
 			try {
 				key_ring.add_key_pair(public_key, private_key);
 			} catch (IOException e1) {
