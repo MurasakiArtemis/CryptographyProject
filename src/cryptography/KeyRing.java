@@ -13,7 +13,7 @@ import java.util.HashMap;
 public class KeyRing 
 {
 	File storage;
-	public HashMap<String, byte[]> key_ring;
+	public HashMap<String, CurvesKey> key_ring;
 	
 	public KeyRing(File storage)
 	{
@@ -24,7 +24,7 @@ public class KeyRing
 		{
 			try(ObjectInputStream ois = new ObjectInputStream(new FileInputStream(storage)))
 			{
-				this.key_ring = (HashMap<String, byte[]>) ois.readObject();
+				this.key_ring = (HashMap<String, CurvesKey>) ois.readObject();
 			} catch (IOException | ClassNotFoundException e) 
 			{
 				System.out.println(e.getMessage());
@@ -33,7 +33,7 @@ public class KeyRing
 	}
 	
 	//Agrega la llave especificada al llavero
-	public void add_public_key(String owner, byte[] key) throws IOException
+	public void add_public_key(String owner, CurvesKey key) throws IOException
 	{
 		key_ring.put(owner, key);
 		save_key_ring();
@@ -47,7 +47,7 @@ public class KeyRing
 	}
 	
 	//Agrega el par de llaves del usuario
-	public void add_key_pair(byte[] public_key, byte[] private_key) throws IOException
+	public void add_key_pair(CurvesKey public_key, CurvesKey private_key) throws IOException
 	{
 		if(key_ring.containsKey("self_public") || key_ring.containsKey("self_private"))
 		{
@@ -75,10 +75,10 @@ public class KeyRing
 	//Exporta la llave pública del usuario a un archivo
 	public void export_public_key(String owner, File export)
 	{
-		try(FileOutputStream oos = new FileOutputStream(export))
+		try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(export)))
 		{
-			byte[] array = key_ring.get(owner);
-			oos.write(array);
+			CurvesKey key = key_ring.get(owner);
+			oos.writeObject(key);
 		} catch (IOException e) 
 		{
 			System.out.println(e.getMessage());
@@ -88,13 +88,11 @@ public class KeyRing
 	//Agrega la llave contenida en un archivo al llavero
 	public void import_public_key(String owner, File export)
 	{
-		try(FileInputStream ois = new FileInputStream(export))
+		try(ObjectInputStream ois = new ObjectInputStream(new FileInputStream(export)))
 		{
-			int filesize = (int) export.length();
-			byte[] key = new byte[filesize];
-			int i = ois.read(key);
+			CurvesKey key = (CurvesKey) ois.readObject();
 			add_public_key(owner, key);
-		} catch (IOException e) 
+		} catch (IOException | ClassNotFoundException e) 
 		{
 			System.out.println(e.getMessage());
 		}
