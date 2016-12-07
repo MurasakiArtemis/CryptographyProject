@@ -226,30 +226,18 @@ public class Curvas {
 	
 	public PuntoCC cifrado2(int x,Punto p,Punto q){
 		Punto kp=null;
-		long x0=0;
 		Punto x0y0=null;
+		long aux=0;
 		try{
 			SecureRandom random=new SecureRandom();
 			long k=(random.nextInt((int)P-1))+1;
-			System.out.println("k= "+k);
-			//long k=6;
-			//ByteBuffer wrapper=ByteBuffer.wrap(key);
-			long aux=0;
-			//do{
-				System.out.println("x= "+x);
-				System.out.println("x= "+Integer.toBinaryString(x));
-				kp=dobladoPunto(p, k);
-				x0y0=dobladoPunto(q, k);
-				System.out.println("px= "+pointCompress(kp).getX());
-				System.out.println("py= "+pointCompress(kp).getY());
-				aux=(x*x0y0.getX())&(0x00000000ffffffff);
-				System.out.println(Long.toBinaryString(aux));
-				System.out.println("y= "+aux%P);
-			//}while(fIn.available()!=0);
+			kp=dobladoPunto(p, k);
+			x0y0=dobladoPunto(q, k);
+			aux=(x*x0y0.getX())&(0x00000000ffffffff);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return new PuntoCC(pointCompress(kp),(x*x0y0.getX())%P);
+		return new PuntoCC(pointCompress(kp),aux%P);
 	}
 	
 	public File descifrado(File file,int m){
