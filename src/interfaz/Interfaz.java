@@ -240,10 +240,7 @@ public class Interfaz {
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado);
 			cipher_decipher.encipher(archivo_origen, archivo_destino, modo_seleccionado);
-			res=curva.cifrado(llave, new Punto(69943,11355), new Punto(63620,48720));
-			System.out.println(res.getX().getX());
-			System.out.println(res.getX().getY());
-			System.out.println(res.getY());
+			res=curva.cifrado(llave, new Punto(69943,11355), curva.dobladoPunto(new Punto(69943,11355), 7));
 			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
 			consola.append("Archivo "+archivo_destino.getName()+" cifrado con exito\n");
 		} catch (Exception e) {

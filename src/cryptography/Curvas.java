@@ -34,10 +34,12 @@ public class Curvas {
 		Punto r=new Punto();
 		long aux1=0,aux2=0,phi=0;
 		if((p.getX()==q.getX())){
-			aux1=(3*((int)Math.pow(p.getX(), 2)))+a;
+			//System.out.println("Prim");
+			aux1=(3*(ExpMod(p.getX(), 2)))+a;
 			aux2=2*p.getY();
 		}
 		else{
+			//System.out.println("Seg");
 			aux1=p.getY()-q.getY();
 			aux2=p.getX()-q.getX();
 		}
@@ -49,10 +51,16 @@ public class Curvas {
 			aux2=P-((aux2*-1)%P);
 		else
 			aux2=aux2%P;
-		if((aux1%aux2)!=0)
+		//System.out.println("aux1= "+aux1+" aux2= "+aux2);
+		if((aux1%aux2)!=0){
+			//System.out.println("Primera");
 			phi=(aux1*EucExt(aux2))%P;
-		else
+		}
+		else{
+			//System.out.println("Segunda");
 			phi=(aux1/aux2)%P;
+		}
+		//System.out.println("Phi= "+phi);
 		r.setX(((phi*phi)-p.getX()-q.getX())%P);
 		r.setY(((phi*(p.getX()-r.getX()))-p.getY())%P);
 		if(r.getX()<0)
@@ -113,24 +121,24 @@ public class Curvas {
 		return;
 	}
 	
-	public ArrayList<Punto> CalPuntos(){
+	private void CalPuntos(){
 		ArrayList<Punto> puntos=new ArrayList<Punto>();
 		long aux=0;
 		for(int i=0;i<P;i++){
 			aux=(ExpMod(i, 3)+(i*a)+b)%P;
-			//System.out.println("i= "+i+" aux= "+aux);
+			System.out.println("i= "+i+" aux= "+aux);
 			for(int j=0;j<resCuadraticos.length;j++){
 				if(aux==resCuadraticos[j]){
 					puntos.add(new Punto(i,j+1));
-					//System.out.println("	x= "+i+" y= "+(j+1));
+					System.out.println("	x= "+i+" y= "+(j+1));
 					puntos.add(new Punto(i,P-(j+1)));
-					//System.out.println("	x= "+i+" y= "+(P-(j+1)));
+					System.out.println("	x= "+i+" y= "+(P-(j+1)));
 				}
 			}
 		}
 		this.puntos=puntos;
 		numPuntos=puntos.size()+1;
-		return puntos;
+		return;
 	}
 	
 	public Punto dobladoPunto(Punto p,long k){
@@ -144,6 +152,17 @@ public class Curvas {
 		}
 		System.out.println(k+"P("+xy.getX()+","+xy.getY()+")");
 		return xy;
+	}
+	
+	public void generarLlavePublica(int m){
+		SecureRandom random=new SecureRandom();
+		Punto p=puntos.get(random.nextInt(numPuntos-1));
+		Punto q=dobladoPunto(p, m);
+	}
+	
+	public int generarLlavePrivada(){
+		SecureRandom random=new SecureRandom();
+		return random.nextInt((int)P-1);
 	}
 	
 	private Punto pointCompress(Punto p){
@@ -179,8 +198,8 @@ public class Curvas {
 			//FileOutputStream fOut = new FileOutputStream(file)
 			byte[] key = new byte[block_size];
 			SecureRandom random=new SecureRandom();
-			//long k=(random.nextInt()%(P-1))+1;
-			long k=6;
+			long k=(random.nextInt((int)P-1))+1;
+			//long k=6;
 			//ByteBuffer wrapper=ByteBuffer.wrap(key);
 			long aux=0;
 			do{
@@ -209,8 +228,9 @@ public class Curvas {
 		Punto x0y0=null;
 		try{
 			SecureRandom random=new SecureRandom();
-			//long k=(random.nextInt()%(P-1))+1;
-			long k=6;
+			long k=(random.nextInt((int)P-1))+1;
+			System.out.println("k= "+k);
+			//long k=6;
 			//ByteBuffer wrapper=ByteBuffer.wrap(key);
 			long aux=0;
 			//do{
@@ -260,12 +280,17 @@ public class Curvas {
 		System.out.println("y= "+p.getY());*/
 		
 		Curvas c=new Curvas(20, 12, 71191);
-		PuntoCC res=c.cifrado2(10, new Punto(69943,11355), new Punto(63620,48720));
+		//System.out.println("Doblado= "+c.dobladoPunto(new Punto(63620,48720), 6).getX());
+		//System.out.println("Doblado= "+c.dobladoPunto(new Punto(63620,48720), 6).getY());
+		System.out.println("Numero de Puntos= "+c.numPuntos);
+		//PuntoCC res=c.cifrado2(10, new Punto(69943,11355), new Punto(63620,48720));
+		PuntoCC res=c.cifrado2(48193, new Punto(69943,11355), c.dobladoPunto(new Punto(69943,11355), 7));
 		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
 		long r=c.descifrado(res, 7);
-		System.out.println(r);
+		System.out.println("Descifrado= "+r);
 		
 		/*Curvas c=new Curvas(2, 7, 31);
+		System.out.println("Numero de Puntos= "+c.numPuntos);
 		PuntoCC res=c.cifrado2(10, new Punto(2,9), c.dobladoPunto(new Punto(2,9), 7));
 		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
 		long r=c.descifrado(res, 7);
