@@ -3,6 +3,8 @@ package cryptography;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.security.SecureRandom;
 
 public class CipherDecipher 
@@ -16,28 +18,43 @@ public class CipherDecipher
 	private AES aes;
 	
 	//Lectura del archivo para descifrar
-	public CipherDecipher(File file /*, KeyRing key_ring*/) throws Exception
+	public CipherDecipher(File file, KeyRing key_ring) throws Exception
 	{
-		FileInputStream fIn = new FileInputStream(file);
 		byte[] key = new byte[(int) file.length()];
-		fIn.read(key);
-		fIn.close();
-		//Descifrar llave con la clave privada
+		try(ObjectInputStream fIn = new ObjectInputStream(new FileInputStream(file)))
+		{
+			//Descifrar llave con la clave privada
+			Curvas decipher = new Curvas();
+			for(int i = 0; fIn.available() != 0; i += 2)
+			{
+				PuntoCC puntocc_fragmento = (PuntoCC) fIn.readObject();
+				short key_fragment = (short) decipher.descifrado(puntocc_fragmento, key_ring.key_ring.get("self_private"));
+				key[i] = (byte)(key_fragment & 0xff);
+				key[i + 1] = (byte)((key_fragment >> 8) & 0xff);
+			}
+		}
 		set_key(key);
 		configure_algorithm();
 		set_block_size();
 	}
 	
 	//Creacion del archivo para cifrar
-	public CipherDecipher(File file, Algorithm algorithm /*, String nombre_destinatario, KeyRing key_ring*/) throws Exception
+	public CipherDecipher(File file, Algorithm algorithm, String nombre_destinatario, KeyRing key_ring) throws Exception
 	{
-		FileOutputStream fOut = new FileOutputStream(file);
 		generate_key(algorithm);
 		configure_algorithm();
 		set_block_size();
-		//Cifrar llave con la clave publica del receptor
-		fOut.write(key);
-		fOut.close();
+		try(ObjectOutputStream fOut = new ObjectOutputStream(new FileOutputStream(file)))
+		{
+			//Cifrar llave con la clave publica del receptor
+			Curvas cipher = new Curvas();
+			for(int i = 0; i < key.length; i += 2)
+			{
+				short key_fragment = (short) (key[i] & (key[i+1] << 8));
+				PuntoCC puntocc_fragmento = cipher.cifrado(key_fragment, key_ring.key_ring.get(nombre_destinatario));
+				fOut.writeObject(puntocc_fragmento);
+			}
+		}
 	}
 	
 	//Ajuste de la llave para descifrar
