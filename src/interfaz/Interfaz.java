@@ -26,6 +26,7 @@ import javax.swing.border.TitledBorder;
 import cryptography.Algorithm;
 import cryptography.CipherDecipher;
 import cryptography.Curvas;
+import cryptography.CurvesKey;
 import cryptography.OperationModes;
 import cryptography.Punto;
 import cryptography.PuntoCC;
@@ -61,6 +62,7 @@ public class Interfaz {
 		String[] scif={"AES128","AES192","AES256","3DES"};
 		JComboBox modo=new JComboBox(smodo);
 		JComboBox cif=new JComboBox(scif);
+		JComboBox llavc=new JComboBox();
 		JTextField rutat=new JTextField();
 				
 		barra.setBounds(new Rectangle(0,0,500,25));
@@ -240,7 +242,7 @@ public class Interfaz {
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado);
 			cipher_decipher.encipher(archivo_origen, archivo_destino, modo_seleccionado);
-			res=curva.cifrado(llave, new Punto(69943,11355), curva.dobladoPunto(new Punto(69943,11355), 7));
+			res=curva.cifrado(llave,new CurvesKey(new Punto(69943,11355), curva.dobladoPunto(new Punto(69943,11355), 7)));
 			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
 			consola.append("Archivo "+archivo_destino.getName()+" cifrado con exito\n");
 		} catch (Exception e) {

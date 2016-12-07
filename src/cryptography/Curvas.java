@@ -3,6 +3,7 @@ package cryptography;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -34,12 +35,10 @@ public class Curvas {
 		Punto r=new Punto();
 		long aux1=0,aux2=0,phi=0;
 		if((p.getX()==q.getX())){
-			//System.out.println("Prim");
 			aux1=(3*(ExpMod(p.getX(), 2)))+a;
 			aux2=2*p.getY();
 		}
 		else{
-			//System.out.println("Seg");
 			aux1=p.getY()-q.getY();
 			aux2=p.getX()-q.getX();
 		}
@@ -51,16 +50,10 @@ public class Curvas {
 			aux2=P-((aux2*-1)%P);
 		else
 			aux2=aux2%P;
-		//System.out.println("aux1= "+aux1+" aux2= "+aux2);
-		if((aux1%aux2)!=0){
-			//System.out.println("Primera");
+		if((aux1%aux2)!=0)
 			phi=(aux1*EucExt(aux2))%P;
-		}
-		else{
-			//System.out.println("Segunda");
+		else
 			phi=(aux1/aux2)%P;
-		}
-		//System.out.println("Phi= "+phi);
 		r.setX(((phi*phi)-p.getX()-q.getX())%P);
 		r.setY(((phi*(p.getX()-r.getX()))-p.getY())%P);
 		if(r.getX()<0)
@@ -79,7 +72,6 @@ public class Curvas {
 				res=(res*base)%P;
 			}
 		}
-		//System.out.println("res Mod= "+res);
 		return res;
 	}
 	
@@ -147,17 +139,17 @@ public class Curvas {
 			if(xy==null)
 				System.out.println("Punto al infinito");
 			else
-				System.out.println((i+1)+"P("+xy.getX()+","+xy.getY()+")");
+				//System.out.println((i+1)+"P("+xy.getX()+","+xy.getY()+")");
 			xy=Suma(p, xy);
 		}
 		System.out.println(k+"P("+xy.getX()+","+xy.getY()+")");
 		return xy;
 	}
 	
-	public void generarLlavePublica(int m){
+	public CurvesKey generarLlavePublica(int m){
 		SecureRandom random=new SecureRandom();
 		Punto p=puntos.get(random.nextInt(numPuntos-1));
-		Punto q=dobladoPunto(p, m);
+		return new CurvesKey(p, dobladoPunto(p, m));
 	}
 	
 	public int generarLlavePrivada(){
@@ -187,20 +179,21 @@ public class Curvas {
 			return new Punto(p.getX(),P-y);
 	}
 
-	public PuntoCC cifrado(File file,Punto p,Punto q){
+	public PuntoCC cifrado(File file,CurvesKey llave){
+		File outfile=new File(file.getParent()+"\\llavec");
 		Punto kp=null;
 		int x=0;
 		long x0=0;
 		Punto x0y0=null;
+		Punto p=llave.generator;
+		Punto q=llave.q;
 		try{
 			System.out.println(file.getName());
 			FileInputStream fIn = new FileInputStream(file);
-			//FileOutputStream fOut = new FileOutputStream(file)
+			FileOutputStream fOut = new FileOutputStream(outfile);
 			byte[] key = new byte[block_size];
 			SecureRandom random=new SecureRandom();
 			long k=(random.nextInt((int)P-1))+1;
-			//long k=6;
-			//ByteBuffer wrapper=ByteBuffer.wrap(key);
 			long aux=0;
 			do{
 				fIn.read(key);
