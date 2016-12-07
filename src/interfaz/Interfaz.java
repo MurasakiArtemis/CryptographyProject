@@ -40,11 +40,11 @@ public class Interfaz {
 	File[] archivos;
 	int numArchivos;
 	OperationModes modo_seleccionado=OperationModes.CBC;
-	Algorithm cifrado=Algorithm.AES192;
+	Algorithm cifrado=Algorithm.AES128;
 	JTextArea consola=new JTextArea();
 	JTextArea lblfiles;
 	Curvas curva;
-	PuntoCC res;
+	File res;
 
 	public Interfaz() {
 		
@@ -246,7 +246,6 @@ public class Interfaz {
 			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
 			consola.append("Archivo "+archivo_destino.getName()+" cifrado con exito\n");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			consola.setSelectedTextColor(Color.RED);
 			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
 		}
@@ -259,17 +258,15 @@ public class Interfaz {
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave);
 			cipher_decipher.decipher(archivo_origen, archivo_destino);
-			long r=curva.descifrado(res, 7);
-			System.out.println("res= "+r);
+			curva.descifrado(res, 7);
+			//System.out.println("res= "+r);
 			consola.append("Archivo "+archivo_destino.getName()+" descifrado con exito\n");
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}	
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		Interfaz i=new Interfaz();
 	}
 

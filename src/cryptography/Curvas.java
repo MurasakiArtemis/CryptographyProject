@@ -2,6 +2,7 @@ package cryptography;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -179,8 +180,8 @@ public class Curvas {
 			return new Punto(p.getX(),P-y);
 	}
 
-	public PuntoCC cifrado(File file,CurvesKey llave){
-		File outfile=new File(file.getParent()+"\\llavec");
+	public File cifrado(File file,CurvesKey llave){
+		File outfile=new File(file.getParent()+"\\llavec.txt");
 		Punto kp=null;
 		int x=0;
 		long x0=0;
@@ -188,31 +189,39 @@ public class Curvas {
 		Punto p=llave.generator;
 		Punto q=llave.q;
 		try{
-			System.out.println(file.getName());
 			FileInputStream fIn = new FileInputStream(file);
 			FileOutputStream fOut = new FileOutputStream(outfile);
 			byte[] key = new byte[block_size];
 			SecureRandom random=new SecureRandom();
 			long k=(random.nextInt((int)P-1))+1;
 			long aux=0;
+			PuntoCC res=new PuntoCC();
+			kp=dobladoPunto(p, k);
+			x0y0=dobladoPunto(q, k);
+			fOut.write((int)file.length());
 			do{
 				fIn.read(key);
 				x=ByteBuffer.wrap(key).getShort()&(0x0000ffff);
 				System.out.println("x= "+x);
 				System.out.println("x= "+Integer.toBinaryString(x));
-				kp=dobladoPunto(p, k);
-				x0y0=dobladoPunto(q, k);
-				System.out.println("px= "+pointCompress(kp).getX());
-				System.out.println("py= "+pointCompress(kp).getY());
+				//System.out.println("px= "+pointCompress(kp).getX());
+				//System.out.println("py= "+pointCompress(kp).getY());
 				aux=(x*x0y0.getX())&(0x00000000ffffffff);
-				System.out.println(Long.toBinaryString(aux));
-				System.out.println("y= "+aux%P);
+				res.setX(pointCompress(kp));
+				res.setY(aux%P);
+				//System.out.println(Long.toBinaryString(aux));
+				//System.out.println("y= "+aux%P);
+				
+				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getX().getX()).array());
+				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getX().getY()).array());
+				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getY()).array());
 			}while(fIn.available()!=0);
 			fIn.close();
+			fOut.close();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return new PuntoCC(pointCompress(kp),(x*x0y0.getX())%P);
+		return outfile;
 	}
 	
 	public PuntoCC cifrado2(int x,Punto p,Punto q){
@@ -243,7 +252,43 @@ public class Curvas {
 		return new PuntoCC(pointCompress(kp),(x*x0y0.getX())%P);
 	}
 	
-	public long descifrado(PuntoCC c,int m){
+	public File descifrado(File file,int m){
+		File outfile=new File(file.getParent()+"\\llaved.txt");
+		PuntoCC c=new PuntoCC();
+		Punto aux=new Punto();
+		Punto p=new Punto();
+		long res=0;
+		try {
+			FileInputStream fIn = new FileInputStream(file);
+			FileOutputStream fOut = new FileOutputStream(outfile);
+			byte[] key = new byte[block_size];
+			int tam=fIn.read();
+			for(int i=0;i<((tam/2)+(tam%2));i++){
+				fIn.read(key);
+				aux.setX(ByteBuffer.wrap(key).getShort()&(0x0000ffff));
+				fIn.read(key);
+				aux.setY(ByteBuffer.wrap(key).getShort()&(0x0000ffff));
+				c.setX(aux);
+				fIn.read(key);
+				c.setY(ByteBuffer.wrap(key).getShort()&(0x0000ffff));
+				p=pointDescompress(c.getX());
+				p=dobladoPunto(p, m);
+				res=(EucExt(p.getX())*c.getY())%P;
+				fOut.write(ByteBuffer.allocate(2).putShort((short)res).array());
+			}
+			fIn.close();
+			fOut.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return outfile;
+	}
+	
+	public long descifrado2(PuntoCC c,int m){
 		Punto p=pointDescompress(c.getX());
 		p=dobladoPunto(p, m);
 		return (EucExt(p.getX())*c.getY())%P;
@@ -279,7 +324,7 @@ public class Curvas {
 		//PuntoCC res=c.cifrado2(10, new Punto(69943,11355), new Punto(63620,48720));
 		PuntoCC res=c.cifrado2(48193, new Punto(69943,11355), c.dobladoPunto(new Punto(69943,11355), 7));
 		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
-		long r=c.descifrado(res, 7);
+		long r=c.descifrado2(res, 7);
 		System.out.println("Descifrado= "+r);
 		
 		/*Curvas c=new Curvas(2, 7, 31);
