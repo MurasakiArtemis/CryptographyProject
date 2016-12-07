@@ -180,7 +180,7 @@ public class Curvas {
 			return new Punto(p.getX(),P-y);
 	}
 
-	public File cifrado(File file,CurvesKey llave){
+	public File cifrado2(File file,CurvesKey llave){
 		File outfile=new File(file.getParent()+"\\llavec.txt");
 		Punto kp=null;
 		int x=0;
@@ -224,7 +224,7 @@ public class Curvas {
 		return outfile;
 	}
 	
-	public PuntoCC cifrado2(int x,Punto p,Punto q){
+	public PuntoCC cifrado(int x,Punto p,Punto q){
 		Punto kp=null;
 		Punto x0y0=null;
 		long aux=0;
@@ -240,7 +240,7 @@ public class Curvas {
 		return new PuntoCC(pointCompress(kp),aux%P);
 	}
 	
-	public File descifrado(File file,int m){
+	public File descifrado2(File file,int m){
 		File outfile=new File(file.getParent()+"\\llaved.txt");
 		PuntoCC c=new PuntoCC();
 		Punto aux=new Punto();
@@ -276,7 +276,7 @@ public class Curvas {
 		return outfile;
 	}
 	
-	public long descifrado2(PuntoCC c,int m){
+	public long descifrado(PuntoCC c,int m){
 		Punto p=pointDescompress(c.getX());
 		p=dobladoPunto(p, m);
 		return (EucExt(p.getX())*c.getY())%P;
