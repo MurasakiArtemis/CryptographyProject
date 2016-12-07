@@ -19,6 +19,15 @@ public class Curvas {
 	private int numPuntos;
 	private int block_size=2;
 	
+	public Curvas()
+	{
+		this.a=20;
+		this.b=12;
+		this.P=71191;
+		ResCua();
+		CalPuntos();
+	}
+	
 	public Curvas(int a,int b,long P) {
 		this.a=a;
 		this.b=b;
@@ -147,6 +156,14 @@ public class Curvas {
 		return xy;
 	}
 	
+	public CurvesKey[] generateKeyPair()
+	{
+		CurvesKey[] keys = new CurvesKey[2];
+		keys[0] = new CurvesKey(generarLlavePrivada());
+		keys[1] = generarLlavePublica(keys[0].m);
+		return keys;
+	}
+	
 	public CurvesKey generarLlavePublica(int m){
 		SecureRandom random=new SecureRandom();
 		Punto p=puntos.get(random.nextInt(numPuntos-1));
@@ -224,7 +241,9 @@ public class Curvas {
 		return outfile;
 	}
 	
-	public PuntoCC cifrado(int x,Punto p,Punto q){
+	public PuntoCC cifrado(int x, CurvesKey key){
+		Punto p = key.generator;
+		Punto q = key.q;
 		Punto kp=null;
 		Punto x0y0=null;
 		long aux=0;
@@ -276,7 +295,8 @@ public class Curvas {
 		return outfile;
 	}
 	
-	public long descifrado(PuntoCC c,int m){
+	public long descifrado(PuntoCC c, CurvesKey key){
+		int m = key.m;
 		Punto p=pointDescompress(c.getX());
 		p=dobladoPunto(p, m);
 		return (EucExt(p.getX())*c.getY())%P;
@@ -310,9 +330,9 @@ public class Curvas {
 		//System.out.println("Doblado= "+c.dobladoPunto(new Punto(63620,48720), 6).getY());
 		System.out.println("Numero de Puntos= "+c.numPuntos);
 		//PuntoCC res=c.cifrado2(10, new Punto(69943,11355), new Punto(63620,48720));
-		PuntoCC res=c.cifrado2(48193, new Punto(69943,11355), c.dobladoPunto(new Punto(69943,11355), 7));
+		PuntoCC res=c.cifrado(48193, new CurvesKey(new Punto(69943,11355), c.dobladoPunto(new Punto(69943,11355), 7)));
 		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
-		long r=c.descifrado2(res, 7);
+		long r=c.descifrado(res, new CurvesKey(7));
 		System.out.println("Descifrado= "+r);
 		
 		/*Curvas c=new Curvas(2, 7, 31);

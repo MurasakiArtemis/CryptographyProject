@@ -94,9 +94,11 @@ public class KeyRingManager
 		//Botón generar llaves
 		button = new JButton("Generar llaves");
 		button.addActionListener(e -> {
-			CurvesKey public_key = Curvas.generate_key();
-			CurvesKey private_key = Curvas.generate_key();
-			try {
+			Curvas key_generator = new Curvas();
+			CurvesKey[] keys = key_generator.generateKeyPair();
+			CurvesKey public_key = keys[1], private_key = keys[0];
+			try 
+			{
 				key_ring.add_key_pair(public_key, private_key);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
@@ -118,13 +120,16 @@ public class KeyRingManager
 	{
 		KeyRing key_ring = new KeyRing(new File("C:\\Users\\erwin\\Desktop\\keyring.key"));
 		Random rand = new Random();
-		key_ring.add_key_pair(new String("MyKey").getBytes(), new String("MyKey").getBytes());
+		Curvas key_generator = new Curvas();
+		CurvesKey[] keys = key_generator.generateKeyPair();
+		CurvesKey public_key = keys[1], private_key = keys[0];
+		key_ring.add_key_pair(public_key, private_key);
 		String key1 = "ABCDE";
 		byte[] add = new byte[5];
 		for(int i = 0; i < 5; i++)
 		{
 			rand.nextBytes(add);
-			key_ring.add_public_key(key1 + new String(add), key1.getBytes());
+			key_ring.add_public_key(key1 + new String(add), key_generator.generateKeyPair()[1]);
 		}
 		KeyRingManager ui = new KeyRingManager(key_ring);
 	}
