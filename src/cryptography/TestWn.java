@@ -9,11 +9,6 @@ public class TestWn {
 
 	public static void main(String[] args) throws Exception 
 	{
-		if(args.length != 6)
-		{
-			System.out.println("Modo de uso: <Algoritmo> <Modo de operacion> <Archivo.extension> <Llave> <-d|-e> <Nombre destino>");
-			return;
-		}
 		KeyRing key_ring = new KeyRing(new File("C:\\Users\\erwin\\Desktop\\keyring.key"));
 		if(key_ring.key_ring.isEmpty())
 		{
@@ -27,6 +22,14 @@ public class TestWn {
 			key_ring.add_public_key("Enrique", key_generator.generateKeyPair()[1]);
 			key_ring.add_public_key("Mariana", key_generator.generateKeyPair()[1]);
 			key_ring.add_public_key("Artemis", key_generator.generateKeyPair()[1]);
+		}
+		if(args.length != 6)
+		{
+			System.out.println("Modo de uso: <Algoritmo> <Modo de operacion> <Archivo.extension> <Llave> <-d|-e> <Nombre destino>");
+			File keyfile = new File("C:\\Users\\erwin\\Desktop\\file.key");
+			CipherDecipher cipher = new CipherDecipher(keyfile, Algorithm.AES192, "Manuel", key_ring);
+			CipherDecipher decipher = new CipherDecipher(keyfile, key_ring);
+			return;
 		}
 		Algorithm algorithm = Algorithm.valueOf(args[0]);
 		OperationModes operation_mode = OperationModes.valueOf(args[1]);

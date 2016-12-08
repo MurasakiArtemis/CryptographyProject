@@ -51,7 +51,8 @@ public class CipherDecipher
 			for(int i = 0; i < key.length; i += 2)
 			{
 				short key_fragment = (short) (key[i] & (key[i+1] << 8));
-				PuntoCC puntocc_fragmento = cipher.cifrado(key_fragment, key_ring.key_ring.get(nombre_destinatario));
+				CurvesKey key = key_ring.key_ring.get(nombre_destinatario);
+				PuntoCC puntocc_fragmento = cipher.cifrado(key_fragment, key);
 				fOut.writeObject(puntocc_fragmento);
 			}
 		}
