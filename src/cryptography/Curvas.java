@@ -195,7 +195,7 @@ public class Curvas {
 			return new Punto(p.getX(),P-y);
 	}
 
-	public File cifrado2(File file,CurvesKey llave){
+	public File cifrado(File file,CurvesKey llave){
 		File outfile=new File(file.getParent()+"\\llavec.txt");
 		Punto kp=null;
 		int x=0;
@@ -257,7 +257,8 @@ public class Curvas {
 		return new PuntoCC(pointCompress(kp),aux%P);
 	}
 	
-	public File descifrado2(File file,int m){
+	public File descifrado(File file,CurvesKey ckey){
+		int m = ckey.m;
 		File outfile=new File(file.getParent()+"\\llaved.txt");
 		PuntoCC c=new PuntoCC();
 		Punto aux=new Punto();

@@ -27,10 +27,12 @@ public class TestWn {
 		{
 			System.out.println("Modo de uso: <Algoritmo> <Modo de operacion> <Archivo.extension> <Llave> <-d|-e> <Nombre destino>");
 			File keyfile = new File("C:\\Users\\erwin\\Desktop\\file.key");
-			CipherDecipher cipher = new CipherDecipher(keyfile, Algorithm.AES192, "Manuel", key_ring);
-			CipherDecipher decipher = new CipherDecipher(keyfile, key_ring);
+			Curvas curva = new Curvas();
+			CipherDecipher cipher = new CipherDecipher(keyfile, Algorithm.AES192, "Manuel", key_ring, curva);
+			CipherDecipher decipher = new CipherDecipher(keyfile, key_ring, curva);
 			return;
 		}
+		Curvas curva = new Curvas();
 		Algorithm algorithm = Algorithm.valueOf(args[0]);
 		OperationModes operation_mode = OperationModes.valueOf(args[1]);
 		String[] filename = args[2].split("\\.");
@@ -40,13 +42,13 @@ public class TestWn {
 		File origin_file = new File(filename[0] + "." + filename[1]);
 		if(encrypt)
 		{
-			CipherDecipher cipher = new CipherDecipher(keyfile, algorithm, nombre_destinatario, key_ring);
+			CipherDecipher cipher = new CipherDecipher(keyfile, algorithm, nombre_destinatario, key_ring, curva);
 			File destination_file = new File(filename[0] + "_" + operation_mode + "_" + algorithm + "_Cipher." + filename[1]);
 			cipher.encipher(origin_file, destination_file, operation_mode);
 		}
 		else
 		{
-			CipherDecipher decipher = new CipherDecipher(keyfile, key_ring);
+			CipherDecipher decipher = new CipherDecipher(keyfile, key_ring, curva);
 			File recovered_file = new File(filename[0] + "_" + operation_mode + "_" + algorithm + "_Decipher." + filename[1]);
 			decipher.decipher(origin_file, recovered_file);
 		}
