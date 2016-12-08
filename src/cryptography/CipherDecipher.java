@@ -16,7 +16,8 @@ public class CipherDecipher
 	private DES secondDES;
 	private DES thirdDES;
 	private AES aes;
-	
+	//Curvas.descifrar() recibe un archivo origen y regresa un arreglo bytes
+	//Curvas.cifrar() recibe un arreglo bytes y un archivo destino
 	//Lectura del archivo para descifrar
 	public CipherDecipher(File file, KeyRing key_ring, Curvas decipher) throws Exception
 	{
@@ -31,9 +32,10 @@ public class CipherDecipher
 				key[i + 1] = (byte)((key_fragment >> 8) & 0xff);
 			}
 		}*///Change files in order to use temporary files
-		File container = decipher.descifrado(file, key_ring.key_ring.get("self_private"));
-		FileInputStream fIn = new FileInputStream(container);
-		byte[] key = new byte[(int) container.length()];
+		File temp = File.createTempFile("prefix", "suffix");
+		decipher.descifrado(file, temp, key_ring.key_ring.get("self_private"));
+		FileInputStream fIn = new FileInputStream(temp);
+		byte[] key = new byte[(int) temp.length()];
 		fIn.read(key);
 		fIn.close();
 		set_key(key);
@@ -51,7 +53,7 @@ public class CipherDecipher
 		FileOutputStream fOut = new FileOutputStream(temp);
 		fOut.write(key);
 		fOut.close();
-		cipher.cifrado(temp, key_ring.key_ring.get(nombre_destinatario));
+		cipher.cifrado(temp, file, key_ring.key_ring.get(nombre_destinatario));
 		/*try(ObjectOutputStream fOut = new ObjectOutputStream(new FileOutputStream(file)))
 		{
 			//Cifrar llave con la clave publica del receptor
