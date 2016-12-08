@@ -300,12 +300,11 @@ public class Curvas {
 		return (EucExt(p.getX())*c.getY())%P;
 	}
 	
-	/*private boolean esCoprimo(int n){
-		if(n==0)
+	public boolean validarCurva(){
+		if(P%4!=3)
 			return false;
-		else if(P%n!=0)
-			return true;
-		else
+		if((((4*ExpMod(a, 3))+(27*ExpMod(b, 2)))%P)==0)
 			return false;
-	}*/
+		return true;
+	}
 }
