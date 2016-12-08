@@ -27,6 +27,7 @@ import cryptography.Algorithm;
 import cryptography.CipherDecipher;
 import cryptography.Curvas;
 import cryptography.CurvesKey;
+import cryptography.KeyRing;
 import cryptography.OperationModes;
 import cryptography.Punto;
 import cryptography.PuntoCC;
@@ -53,6 +54,7 @@ public class Interfaz {
 		JFileChooser jfc=new JFileChooser();
 		JButton rutab=new JButton("Ruta destino");
 		JButton bllavero=new JButton("Ruta Llavero");
+		JButton openkeyring=new JButton("Abrir llavero");
 		JFileChooser fcllavero=new JFileChooser();
 		JButton bcifrar=new JButton("Cifrar");
 		JButton bdescifrar=new JButton("Descifrar");
@@ -62,7 +64,7 @@ public class Interfaz {
 		String[] scif={"AES128","AES192","AES256","3DES"};
 		JComboBox modo=new JComboBox(smodo);
 		JComboBox cif=new JComboBox(scif);
-		JComboBox llavc=new JComboBox();
+		JComboBox llavc=new JComboBox(smodo);
 		JTextField rutat=new JTextField();
 				
 		barra.setBounds(new Rectangle(0,0,500,25));
@@ -74,13 +76,16 @@ public class Interfaz {
 		l1.setBounds(new Rectangle(10,200,250,20));
 		l2=new JLabel("Modo de operación:");
 		l2.setBounds(new Rectangle(10,270,150,25));
+		l3=new JLabel("Destinatario:");
+		l3.setBounds(new Rectangle(300,30,180,25));
 		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		fcllavero.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		//fcllavero.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		rutab.setBounds(new Rectangle(350,230,120,25));
 		bcifrar.setBounds(new Rectangle(260,300,100,25));
 		bdescifrar.setBounds(new Rectangle(380,300,100,25));
 		modo.setBounds(new Rectangle(10,300,100,25));
 		cif.setBounds(new Rectangle(130,300,100,25));
+		llavc.setBounds(new Rectangle(300,70,180,25));
 		rutat.setBounds(new Rectangle(10,230,330,25));
 		consola.setEditable(false);
 		consola.setBorder(new TitledBorder("Consola"));
@@ -116,6 +121,16 @@ public class Interfaz {
 					cifrado=Algorithm.AES256;
 				else if(((String)cif.getSelectedItem()).equals("3DES"))
 					cifrado=Algorithm.DES168;
+			}
+		});
+		
+		/************	Accion para el combo box del destinatario	**************/
+		
+		llavc.addItemListener(new ItemListener() {
+			
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				
 			}
 		});
 		
@@ -157,12 +172,23 @@ public class Interfaz {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				fcllavero.showSaveDialog(null);
-				if(jfc.getSelectedFile()==null){
+				System.out.println(fcllavero.getSelectedFile());
+				if(fcllavero.getSelectedFile()==null){
 					JOptionPane.showMessageDialog(null, "No seleccionaste ninguna ruta", "Error", JOptionPane.ERROR_MESSAGE);
 				}
 				else{
 					rutaLlavero=fcllavero.getSelectedFile().getAbsolutePath();
 				}
+			}
+		});
+		
+		/************	Accion del boton para la ruta del llavero	**************/
+		
+		openkeyring.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				//KeyRingManager krm=new KeyRingManager(new KeyRing(new File(rutaLlavero)));
 			}
 		});
 		
@@ -216,6 +242,7 @@ public class Interfaz {
 		});
 		
 		barra.add(bllavero);
+		barra.add(openkeyring);
 		f.setLayout(null);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setSize(500, 500);
@@ -227,10 +254,12 @@ public class Interfaz {
 	    f.add(rutab);
 	    f.add(l1);
 	    f.add(l2);
+	    f.add(l3);
 	    f.add(bcifrar);
 	    f.add(bdescifrar);
 	    f.add(modo);
 	    f.add(cif);
+	    f.add(llavc);
 	    f.add(rutat);
 	    f.add(scrollc);
 	}

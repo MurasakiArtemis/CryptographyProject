@@ -148,8 +148,6 @@ public class Curvas {
 		for(int i=0;i<k-1;i++){
 			if(xy==null)
 				System.out.println("Punto al infinito");
-			else
-				//System.out.println((i+1)+"P("+xy.getX()+","+xy.getY()+")");
 			xy=Suma(p, xy);
 		}
 		System.out.println(k+"P("+xy.getX()+","+xy.getY()+")");
@@ -310,51 +308,4 @@ public class Curvas {
 		else
 			return false;
 	}*/
-	
-	public static void main(String[] args) {
-		/*Curvas c=new Curvas(1,6,11);
-		ArrayList<Punto> ap=c.CalPuntos();
-		for(int i=0;i<ap.size();i++){
-			System.out.println("x= "+ap.get(i).getX());
-			System.out.println("y= "+ap.get(i).getY());
-		}*/
-		
-		/*Curvas c=new Curvas(20, 12, 71191);
-		System.out.println(c.numPuntos);
-		Punto p=c.dobladoPunto(new Punto(69943,11355), 7);
-		System.out.println("x= "+p.getX());
-		System.out.println("y= "+p.getY());*/
-		
-		Curvas c=new Curvas(20, 12, 71191);
-		//System.out.println("Doblado= "+c.dobladoPunto(new Punto(63620,48720), 6).getX());
-		//System.out.println("Doblado= "+c.dobladoPunto(new Punto(63620,48720), 6).getY());
-		System.out.println("Numero de Puntos= "+c.numPuntos);
-		//PuntoCC res=c.cifrado2(10, new Punto(69943,11355), new Punto(63620,48720));
-		PuntoCC res=c.cifrado(48193, new CurvesKey(new Punto(69943,11355), c.dobladoPunto(new Punto(69943,11355), 7)));
-		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
-		long r=c.descifrado(res, new CurvesKey(7));
-		System.out.println("Descifrado= "+r);
-		
-		/*Curvas c=new Curvas(2, 7, 31);
-		System.out.println("Numero de Puntos= "+c.numPuntos);
-		PuntoCC res=c.cifrado2(10, new Punto(2,9), c.dobladoPunto(new Punto(2,9), 7));
-		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
-		long r=c.descifrado(res, 7);
-		System.out.println(r);*/
-		
-		/*Curvas c=new Curvas(1, 6, 11);
-		PuntoCC res=c.cifrado(9, new Punto(2,7), new Punto(7,2));
-		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
-		c.ResCua();
-		int r=c.descifrado(res, 7);
-		System.out.println(r);*/
-		
-		//Cifrado
-		/*Curvas c=new Curvas(2, 9, 19);
-		PuntoCC res=c.cifrado2(10, new Punto(0,3), new Punto(7,10));
-		System.out.println("X kp= "+res.getX().getX()+" Y kp= "+res.getX().getY()+" Y= "+res.getY());
-		long r=c.descifrado(res, 3);
-		System.out.println(r);*/
-		
-	}
 }
