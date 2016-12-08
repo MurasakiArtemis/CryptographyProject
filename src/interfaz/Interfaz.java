@@ -189,6 +189,7 @@ public class Interfaz {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				//KeyRingManager krm=new KeyRingManager(new KeyRing(new File(rutaLlavero)));
+				//
 			}
 		});
 		
