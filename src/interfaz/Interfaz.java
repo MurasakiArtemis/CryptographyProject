@@ -46,7 +46,9 @@ public class Interfaz {
 	JTextArea lblfiles;
 	Curvas curva;
 	File res;
-
+	KeyRing llavero;
+	String user;
+	
 	public Interfaz() {
 		
 		curva=new Curvas(20, 12, 71191);
@@ -64,7 +66,7 @@ public class Interfaz {
 		String[] scif={"AES128","AES192","AES256","3DES"};
 		JComboBox modo=new JComboBox(smodo);
 		JComboBox cif=new JComboBox(scif);
-		JComboBox llavc=new JComboBox(smodo);
+		JComboBox<String> llavc = new JComboBox<>();
 		JTextField rutat=new JTextField();
 				
 		barra.setBounds(new Rectangle(0,0,500,25));
@@ -130,7 +132,7 @@ public class Interfaz {
 			
 			@Override
 			public void itemStateChanged(ItemEvent e) {
-				
+				user = (String) llavc.getSelectedItem();
 			}
 		});
 		
@@ -178,6 +180,14 @@ public class Interfaz {
 				}
 				else{
 					rutaLlavero=fcllavero.getSelectedFile().getAbsolutePath();
+					llavero = new KeyRing(fcllavero.getSelectedFile());
+					llavc.removeAllItems();
+					for(String name : llavero.key_ring.keySet())
+					{
+						if(name.contains("self"))
+							continue;
+						llavc.addItem(name);
+					}
 				}
 			}
 		});
@@ -188,8 +198,7 @@ public class Interfaz {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				//KeyRingManager krm=new KeyRingManager(new KeyRing(new File(rutaLlavero)));
-				//
+				KeyRingManager krm=new KeyRingManager(new KeyRing(new File(rutaLlavero)));
 			}
 		});
 		
@@ -270,7 +279,7 @@ public class Interfaz {
 		File archivo_destino=new File(destino+"\\"+tok.nextToken()+"_Cipher."+tok.nextToken());
 		File llave=new File(destino+"\\llave.txt");
 	    try {
-	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado);
+	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado, user, llavero, curva);
 			cipher_decipher.encipher(archivo_origen, archivo_destino, modo_seleccionado);
 			//res=curva.cifrado(llave,new CurvesKey(new Punto(69943,11355), curva.dobladoPunto(new Punto(69943,11355), 7)));
 			consola.append("Se a creado el archivo llave "+llave.getName()+" en el directorio a actual\n");
@@ -286,7 +295,7 @@ public class Interfaz {
 		File archivo_destino=new File(destino+"\\"+tok.nextToken()+"_Decipher."+tok.nextToken());
 		File llave=new File(destino+"\\llave.txt");
 	    try {
-	    	CipherDecipher cipher_decipher=new CipherDecipher(llave);
+	    	CipherDecipher cipher_decipher=new CipherDecipher(llave, llavero, curva);
 			cipher_decipher.decipher(archivo_origen, archivo_destino);
 			//curva.descifrado(res, 7);
 			//System.out.println("res= "+r);

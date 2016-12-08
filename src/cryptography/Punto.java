@@ -1,7 +1,13 @@
 package cryptography;
 
-public class Punto {
+import java.io.Serializable;
 
+public class Punto implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private long x;
 	private long y;
 	

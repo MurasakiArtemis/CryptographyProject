@@ -16,15 +16,14 @@ public class CipherDecipher
 	private DES secondDES;
 	private DES thirdDES;
 	private AES aes;
-	
+	//Curvas.descifrar() recibe un archivo origen y regresa un arreglo bytes
+	//Curvas.cifrar() recibe un arreglo bytes y un archivo destino
 	//Lectura del archivo para descifrar
-	public CipherDecipher(File file, KeyRing key_ring) throws Exception
+	public CipherDecipher(File file, KeyRing key_ring, Curvas decipher) throws Exception
 	{
-		byte[] key = new byte[(int) file.length()];
-		try(ObjectInputStream fIn = new ObjectInputStream(new FileInputStream(file)))
+		/*try(ObjectInputStream fIn = new ObjectInputStream(new FileInputStream(file)))
 		{
 			//Descifrar llave con la clave privada
-			Curvas decipher = new Curvas();
 			for(int i = 0; fIn.available() != 0; i += 2)
 			{
 				PuntoCC puntocc_fragmento = (PuntoCC) fIn.readObject();
@@ -32,22 +31,32 @@ public class CipherDecipher
 				key[i] = (byte)(key_fragment & 0xff);
 				key[i + 1] = (byte)((key_fragment >> 8) & 0xff);
 			}
-		}
+		}*///Change files in order to use temporary files
+		File temp = File.createTempFile("prefix", "suffix");
+		decipher.descifrado(file, temp, key_ring.key_ring.get("self_private"));
+		FileInputStream fIn = new FileInputStream(temp);
+		byte[] key = new byte[(int) temp.length()];
+		fIn.read(key);
+		fIn.close();
 		set_key(key);
 		configure_algorithm();
 		set_block_size();
 	}
 	
-	//Creacion del archivo para cifrar
-	public CipherDecipher(File file, Algorithm algorithm, String nombre_destinatario, KeyRing key_ring) throws Exception
+	//Creacion del archivo para cifrar//file is not used, use it to store the ciphered key 
+	public CipherDecipher(File file, Algorithm algorithm, String nombre_destinatario, KeyRing key_ring, Curvas cipher) throws Exception
 	{
 		generate_key(algorithm);
 		configure_algorithm();
 		set_block_size();
-		try(ObjectOutputStream fOut = new ObjectOutputStream(new FileOutputStream(file)))
+		File temp = File.createTempFile("prefix", "suffix");
+		FileOutputStream fOut = new FileOutputStream(temp);
+		fOut.write(key);
+		fOut.close();
+		cipher.cifrado(temp, file, key_ring.key_ring.get(nombre_destinatario));
+		/*try(ObjectOutputStream fOut = new ObjectOutputStream(new FileOutputStream(file)))
 		{
 			//Cifrar llave con la clave publica del receptor
-			Curvas cipher = new Curvas();
 			for(int i = 0; i < key.length; i += 2)
 			{
 				short key_fragment = (short) (key[i] & (key[i+1] << 8));
@@ -55,7 +64,7 @@ public class CipherDecipher
 				PuntoCC puntocc_fragmento = cipher.cifrado(key_fragment, key);
 				fOut.writeObject(puntocc_fragmento);
 			}
-		}
+		}*/
 	}
 	
 	//Ajuste de la llave para descifrar

@@ -111,7 +111,7 @@ public class KeyRingManager
 		c.gridy = 1;
 		window.add(button, c);
 		frame.pack();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(500, 500);
 		frame.setVisible(true);
 	}

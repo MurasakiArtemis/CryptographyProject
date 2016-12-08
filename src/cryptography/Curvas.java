@@ -195,8 +195,8 @@ public class Curvas {
 			return new Punto(p.getX(),P-y);
 	}
 
-	public File cifrado2(File file,CurvesKey llave){
-		File outfile=new File(file.getParent()+"\\llavec.txt");
+	public /*File*/ void cifrado(File file, File outfile, CurvesKey llave){
+		//File outfile=new File(file.getParent()+"\\llavec.txt");
 		Punto kp=null;
 		int x=0;
 		long x0=0;
@@ -236,7 +236,7 @@ public class Curvas {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		return outfile;
+		//return outfile;
 	}
 	
 	public PuntoCC cifrado(int x, CurvesKey key){
@@ -257,8 +257,9 @@ public class Curvas {
 		return new PuntoCC(pointCompress(kp),aux%P);
 	}
 	
-	public File descifrado2(File file,int m){
-		File outfile=new File(file.getParent()+"\\llaved.txt");
+	public /*File*/ void descifrado(File file, File outfile, CurvesKey ckey){
+		int m = ckey.m;
+		//File outfile=new File(file.getParent()+"\\llaved.txt");
 		PuntoCC c=new PuntoCC();
 		Punto aux=new Punto();
 		Punto p=new Punto();
@@ -290,7 +291,7 @@ public class Curvas {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return outfile;
+		//return outfile;
 	}
 	
 	public long descifrado(PuntoCC c, CurvesKey key){
