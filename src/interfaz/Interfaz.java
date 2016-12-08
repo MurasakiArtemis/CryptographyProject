@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.StringTokenizer;
 
@@ -192,13 +194,67 @@ public class Interfaz {
 			}
 		});
 		
-		/************	Accion del boton para la ruta del llavero	**************/
+		/************	Accion del boton para abrir llavero	**************/
 		
 		openkeyring.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				KeyRingManager krm=new KeyRingManager(new KeyRing(new File(rutaLlavero)));
+				if(rutaLlavero==null){
+					JOptionPane.showMessageDialog(null, "No seleccionaste ningun llavero", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				KeyRingManager krm=new KeyRingManager(llavero, curva);
+				krm.frame.addWindowListener(new WindowListener() {
+					
+					@Override
+					public void windowOpened(WindowEvent arg0) {
+						// TODO Auto-generated method stub
+						f.setEnabled(false);
+					}
+					
+					@Override
+					public void windowIconified(WindowEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeiconified(WindowEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowDeactivated(WindowEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+					
+					@Override
+					public void windowClosing(WindowEvent arg0) {
+						// TODO Auto-generated method stub
+						llavc.removeAllItems();
+						for(String name : llavero.key_ring.keySet())
+						{
+							if(name.contains("self"))
+								continue;
+							llavc.addItem(name);
+						}
+						f.setEnabled(true);
+					}
+					
+					@Override
+					public void windowClosed(WindowEvent arg0) {
+						// TODO Auto-generated method stub
+					}
+					
+					@Override
+					public void windowActivated(WindowEvent arg0) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
 			}
 		});
 		

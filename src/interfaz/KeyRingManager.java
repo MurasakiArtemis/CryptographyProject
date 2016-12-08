@@ -26,12 +26,12 @@ import net.iharder.dnd.FileDrop.Listener;
 
 public class KeyRingManager 
 {
-	private JFrame frame = new JFrame("Llavero");
+	public JFrame frame = new JFrame("Llavero");
 	private Container window = frame.getContentPane();
 	private KeyRing key_ring;
 	private UsersPanel key_ring_panel;
 	
-	public KeyRingManager(KeyRing key_ring)
+	public KeyRingManager(KeyRing key_ring, Curvas key_generator)
 	{
 		this.key_ring = key_ring;
 		
@@ -94,7 +94,6 @@ public class KeyRingManager
 		//Botón generar llaves
 		button = new JButton("Generar llaves");
 		button.addActionListener(e -> {
-			Curvas key_generator = new Curvas();
 			CurvesKey[] keys = key_generator.generateKeyPair();
 			CurvesKey public_key = keys[1], private_key = keys[0];
 			try 
@@ -131,7 +130,7 @@ public class KeyRingManager
 			rand.nextBytes(add);
 			key_ring.add_public_key(key1 + new String(add), key_generator.generateKeyPair()[1]);
 		}
-		KeyRingManager ui = new KeyRingManager(key_ring);
+		KeyRingManager ui = new KeyRingManager(key_ring, key_generator);
 	}
 
 }

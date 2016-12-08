@@ -38,6 +38,12 @@ public class CipherDecipher
 		byte[] key = new byte[(int) temp.length()];
 		fIn.read(key);
 		fIn.close();
+		if(key.length == 22)
+		{
+			byte[] new_key = new byte[21];
+			System.arraycopy(key, 0, new_key, 0, 21);
+			key = new_key;
+		}
 		set_key(key);
 		configure_algorithm();
 		set_block_size();

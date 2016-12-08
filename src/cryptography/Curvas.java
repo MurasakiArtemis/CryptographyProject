@@ -207,6 +207,7 @@ public class Curvas {
 			FileInputStream fIn = new FileInputStream(file);
 			FileOutputStream fOut = new FileOutputStream(outfile);
 			byte[] key = new byte[block_size];
+			//int tam=(int) file.length();
 			SecureRandom random=new SecureRandom();
 			long k=(random.nextInt((int)P-1))+1;
 			long aux=0;
@@ -217,9 +218,11 @@ public class Curvas {
 			do{
 				fIn.read(key);
 				x=ByteBuffer.wrap(key).getShort()&(0x0000ffff);
+				System.out.println("Binario x= "+Integer.toBinaryString(x));
+				System.out.println("Decimal x= "+x);
 				aux=(x*x0y0.getX())&(0x00000000ffffffff);
 				res.setX(pointCompress(kp));
-				res.setY(aux%P);				
+				res.setY(aux%P);		
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getX().getX()).array());
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getX().getY()).array());
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getY()).array());
