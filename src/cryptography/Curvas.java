@@ -210,16 +210,17 @@ public class Curvas {
 			//int tam=(int) file.length();
 			SecureRandom random=new SecureRandom();
 			long k=(random.nextInt((int)P-1))+1;
+			System.out.println("k= "+k);
 			long aux=0;
 			PuntoCC res=new PuntoCC();
 			kp=dobladoPunto(p, k);
+			System.out.println("kp.x= "+kp.getX()+" kp.y= "+kp.getY());
 			x0y0=dobladoPunto(q, k);
+			System.out.println("x0y0.x= "+x0y0.getX()+" x0y0.y= "+x0y0.getY());
 			fOut.write((int)file.length());
 			do{
 				fIn.read(key);
 				x=ByteBuffer.wrap(key).getShort()&(0x0000ffff);
-				System.out.println("Binario x= "+Integer.toBinaryString(x));
-				System.out.println("Decimal x= "+x);
 				aux=(x*x0y0.getX())&(0x00000000ffffffff);
 				res.setX(pointCompress(kp));
 				res.setY(aux%P);		
@@ -274,6 +275,7 @@ public class Curvas {
 				fIn.read(key);
 				c.setY(ByteBuffer.wrap(key).getShort()&(0x0000ffff));
 				p=pointDescompress(c.getX());
+				System.out.println("p.x= "+p.getX()+" p.y= "+p.getY());
 				p=dobladoPunto(p, m);
 				res=(EucExt(p.getX())*c.getY())%P;
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res).array());

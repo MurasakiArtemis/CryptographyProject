@@ -294,14 +294,14 @@ public class Interfaz {
 						JOptionPane.showMessageDialog(null, "No hay ruta de destino", "Error", JOptionPane.ERROR_MESSAGE);
 					}
 					else{
-						if(new File(destino+"\\llave.txt").exists()){
+						//if(new File(destino+"\\llave.txt").exists()){
 							for(int i=0;i<numArchivos;i++){
 								descifrar(archivos[i]);
 							}
-						}
-						else{
-							JOptionPane.showMessageDialog(null, "No existe el archivo para la llave", "Error", JOptionPane.ERROR_MESSAGE);
-						}
+						//}
+						//else{
+							//JOptionPane.showMessageDialog(null, "No existe el archivo para la llave", "Error", JOptionPane.ERROR_MESSAGE);
+						//}
 					}
 				}
 			}
@@ -333,7 +333,8 @@ public class Interfaz {
 	public void cifrar(File archivo_origen){
 		StringTokenizer tok=new StringTokenizer(archivo_origen.getName(), ".");
 		File archivo_destino=new File(destino+"\\"+tok.nextToken()+"_Cipher."+tok.nextToken());
-		File llave=new File(destino+"\\llave.txt");
+		tok=new StringTokenizer(archivo_destino.getName(), ".");
+		File llave=new File(destino+"\\"+tok.nextToken()+"_llave.txt");
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave,cifrado, user, llavero, curva);
 			cipher_decipher.encipher(archivo_origen, archivo_destino, modo_seleccionado);
@@ -348,7 +349,8 @@ public class Interfaz {
 	public void descifrar(File archivo_origen){
 		StringTokenizer tok=new StringTokenizer(archivo_origen.getName(), ".");
 		File archivo_destino=new File(destino+"\\"+tok.nextToken()+"_Decipher."+tok.nextToken());
-		File llave=new File(destino+"\\llave.txt");
+		tok=new StringTokenizer(archivo_origen.getName(), ".");
+		File llave=new File(destino+"\\"+tok.nextToken()+"_llave.txt");
 	    try {
 	    	CipherDecipher cipher_decipher=new CipherDecipher(llave, llavero, curva);
 			cipher_decipher.decipher(archivo_origen, archivo_destino);
