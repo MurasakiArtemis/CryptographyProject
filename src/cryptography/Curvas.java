@@ -117,7 +117,7 @@ public class Curvas {
 		int q[]=new int[(int)P/2];
 		for(int i=1;i<=(P/2);i++){
 			q[i-1]=(int)((i*i)%P);
-			System.out.println(q[i-1]);
+			//System.out.println(q[i-1]);
 		}
 		resCuadraticos=q;
 		return;
@@ -128,13 +128,13 @@ public class Curvas {
 		long aux=0;
 		for(int i=0;i<P;i++){
 			aux=(ExpMod(i, 3)+(i*a)+b)%P;
-			System.out.println("i= "+i+" aux= "+aux);
+			//System.out.println("i= "+i+" aux= "+aux);
 			for(int j=0;j<resCuadraticos.length;j++){
 				if(aux==resCuadraticos[j]){
 					puntos.add(new Punto(i,j+1));
-					System.out.println("	x= "+i+" y= "+(j+1));
+					//System.out.println("	x= "+i+" y= "+(j+1));
 					puntos.add(new Punto(i,P-(j+1)));
-					System.out.println("	x= "+i+" y= "+(P-(j+1)));
+					//System.out.println("	x= "+i+" y= "+(P-(j+1)));
 				}
 			}
 		}
@@ -150,7 +150,7 @@ public class Curvas {
 				System.out.println("Punto al infinito");
 			xy=Suma(p, xy);
 		}
-		System.out.println(k+"P("+xy.getX()+","+xy.getY()+")");
+		//System.out.println(k+"P("+xy.getX()+","+xy.getY()+")");
 		return xy;
 	}
 	
@@ -210,13 +210,13 @@ public class Curvas {
 			//int tam=(int) file.length();
 			SecureRandom random=new SecureRandom();
 			long k=(random.nextInt((int)P-1))+1;
-			System.out.println("k= "+k);
+			//System.out.println("k= "+k);
 			long aux=0;
 			PuntoCC res=new PuntoCC();
 			kp=dobladoPunto(p, k);
-			System.out.println("kp.x= "+kp.getX()+" kp.y= "+kp.getY());
+			//System.out.println("kp.x= "+kp.getX()+" kp.y= "+kp.getY());
 			x0y0=dobladoPunto(q, k);
-			System.out.println("x0y0.x= "+x0y0.getX()+" x0y0.y= "+x0y0.getY());
+			//System.out.println("x0y0.x= "+x0y0.getX()+" x0y0.y= "+x0y0.getY());
 			fOut.write((int)file.length());
 			do{
 				fIn.read(key);
@@ -275,7 +275,7 @@ public class Curvas {
 				fIn.read(key);
 				c.setY(ByteBuffer.wrap(key).getShort()&(0x0000ffff));
 				p=pointDescompress(c.getX());
-				System.out.println("p.x= "+p.getX()+" p.y= "+p.getY());
+				//System.out.println("p.x= "+p.getX()+" p.y= "+p.getY());
 				p=dobladoPunto(p, m);
 				res=(EucExt(p.getX())*c.getY())%P;
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res).array());
