@@ -53,7 +53,7 @@ public class Interfaz {
 	
 	public Interfaz() {
 		
-		curva=new Curvas(20, 12, 71191);
+		curva=new Curvas(9,5,65011);
 		JPanel  myPanel = new JPanel();
 		JFileChooser jfc=new JFileChooser();
 		JButton rutab=new JButton("Ruta destino");
@@ -176,7 +176,6 @@ public class Interfaz {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				fcllavero.showSaveDialog(null);
-				System.out.println(fcllavero.getSelectedFile());
 				if(fcllavero.getSelectedFile()==null){
 					JOptionPane.showMessageDialog(null, "No seleccionaste ninguna ruta", "Error", JOptionPane.ERROR_MESSAGE);
 				}

@@ -21,9 +21,9 @@ public class Curvas {
 	
 	public Curvas()
 	{
-		this.a=20;
-		this.b=12;
-		this.P=71191;
+		this.a=9;
+		this.b=5;
+		this.P=65011;
 		ResCua();
 		CalPuntos();
 	}
@@ -115,10 +115,8 @@ public class Curvas {
 	
 	private void ResCua(){
 		int q[]=new int[(int)P/2];
-		for(int i=1;i<=(P/2);i++){
+		for(int i=1;i<=(P/2);i++)
 			q[i-1]=(int)((i*i)%P);
-			//System.out.println(q[i-1]);
-		}
 		resCuadraticos=q;
 		return;
 	}
@@ -128,13 +126,10 @@ public class Curvas {
 		long aux=0;
 		for(int i=0;i<P;i++){
 			aux=(ExpMod(i, 3)+(i*a)+b)%P;
-			//System.out.println("i= "+i+" aux= "+aux);
 			for(int j=0;j<resCuadraticos.length;j++){
 				if(aux==resCuadraticos[j]){
 					puntos.add(new Punto(i,j+1));
-					//System.out.println("	x= "+i+" y= "+(j+1));
 					puntos.add(new Punto(i,P-(j+1)));
-					//System.out.println("	x= "+i+" y= "+(P-(j+1)));
 				}
 			}
 		}
@@ -146,11 +141,10 @@ public class Curvas {
 	public Punto dobladoPunto(Punto p,long k){
 		Punto xy=p;
 		for(int i=0;i<k-1;i++){
-			if(xy==null)
-				System.out.println("Punto al infinito");
+			//if(xy==null)
+				//System.out.println("Punto al infinito");
 			xy=Suma(p, xy);
 		}
-		//System.out.println(k+"P("+xy.getX()+","+xy.getY()+")");
 		return xy;
 	}
 	
@@ -207,23 +201,19 @@ public class Curvas {
 			FileInputStream fIn = new FileInputStream(file);
 			FileOutputStream fOut = new FileOutputStream(outfile);
 			byte[] key = new byte[block_size];
-			//int tam=(int) file.length();
 			SecureRandom random=new SecureRandom();
 			long k=(random.nextInt((int)P-1))+1;
-			//System.out.println("k= "+k);
 			long aux=0;
 			PuntoCC res=new PuntoCC();
 			kp=dobladoPunto(p, k);
-			//System.out.println("kp.x= "+kp.getX()+" kp.y= "+kp.getY());
 			x0y0=dobladoPunto(q, k);
-			//System.out.println("x0y0.x= "+x0y0.getX()+" x0y0.y= "+x0y0.getY());
 			fOut.write((int)file.length());
 			do{
 				fIn.read(key);
 				x=ByteBuffer.wrap(key).getShort()&(0x0000ffff);
 				aux=(x*x0y0.getX())&(0x00000000ffffffff);
 				res.setX(pointCompress(kp));
-				res.setY(aux%P);		
+				res.setY(aux%P);
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getX().getX()).array());
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getX().getY()).array());
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res.getY()).array());
@@ -275,7 +265,6 @@ public class Curvas {
 				fIn.read(key);
 				c.setY(ByteBuffer.wrap(key).getShort()&(0x0000ffff));
 				p=pointDescompress(c.getX());
-				//System.out.println("p.x= "+p.getX()+" p.y= "+p.getY());
 				p=dobladoPunto(p, m);
 				res=(EucExt(p.getX())*c.getY())%P;
 				fOut.write(ByteBuffer.allocate(2).putShort((short)res).array());
@@ -306,4 +295,5 @@ public class Curvas {
 			return false;
 		return true;
 	}
+	
 }
